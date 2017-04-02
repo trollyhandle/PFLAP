@@ -143,7 +143,7 @@ http://mcsp.wartburg.edu/zelle/python for a quick reference"""
 #     Added ability to set text atttributes.
 #     Added Entry boxes.
 
-import time, os, sys
+import time, os, sys, math
 
 try:  # import as appropriate for 2.x vs. 3.x
    import tkinter as tk
@@ -482,11 +482,15 @@ class Point(GraphicsObject):
     def getX(self): return self.x
     def getY(self): return self.y
 
+    def distanceTo(self, other):
+        return math.sqrt((self.x-other.x)**2 + (self.y-other.y)**2)
+
+
 class _BBox(GraphicsObject):
     # Internal base class for objects represented by bounding box
     # (opposite corners) Line segment is a degenerate case.
     
-    def __init__(self, p1, p2, options=["outline","width","fill"]):
+    def __init__(self, p1, p2, options={"outline","width","fill"}):
         GraphicsObject.__init__(self, options)
         self.p1 = p1.clone()
         self.p2 = p2.clone()
@@ -495,7 +499,7 @@ class _BBox(GraphicsObject):
         self.p1.x = self.p1.x + dx
         self.p1.y = self.p1.y + dy
         self.p2.x = self.p2.x + dx
-        self.p2.y = self.p2.y  + dy
+        self.p2.y = self.p2.y + dy
                 
     def getP1(self): return self.p1.clone()
 
@@ -522,6 +526,10 @@ class Rectangle(_BBox):
         other = Rectangle(self.p1, self.p2)
         other.config = self.config.copy()
         return other
+
+    def contains(self, point):
+        return ((self.p1.x <= point.x <= self.p2.x or self.p2.x <= point.x <= self.p1.x)
+            and (self.p1.y <= point.y <= self.p2.y or self.p2.y <= point.y <= self.p1.y))
         
 class Oval(_BBox):
     
@@ -555,11 +563,14 @@ class Circle(Oval):
         
     def getRadius(self):
         return self.radius
+
+    def contains(self, point):
+        return self.getCenter().distanceTo(point) <= self.radius
               
 class Line(_BBox):
     
     def __init__(self, p1, p2):
-        _BBox.__init__(self, p1, p2, ["arrow","fill","width"])
+        _BBox.__init__(self, p1, p2, {"arrow","fill","width"})
         self.setFill(DEFAULT_CONFIG['outline'])
         self.setOutline = self.setFill
    
