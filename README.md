@@ -26,4 +26,5 @@ This tool will have an interface similar to JFLAP in several ways:
 
         /***** optional extras *****/
         Graphs can be saved to file, and loaded from files (maybe '*.pff' ?)
-        DFA's can be generated from a transition matrix input (csv-style?)                                                                          
+        DFA's can be generated from a transition matrix input (csv-style?)
+        
