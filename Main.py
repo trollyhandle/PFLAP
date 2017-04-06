@@ -45,6 +45,7 @@ class State:
         return self.circle.contains(point)
 
     def add_transition(self, line):
+        line.setArrow("last")
         self.transitions.append(line)
 
     def get_points(self, index):
@@ -59,6 +60,7 @@ class State:
         for i in range(len(self.transitions)):
             self.transitions[i].undraw()
 
+    # Updates and redraws connected transitions
     def redraw(self, index, new, win):
         first, second = self.transitions[index].getP1(), self.transitions[index].getP2()
         if (self.circle.contains(first)):
@@ -71,16 +73,16 @@ class State:
                 if self.transitions[index] in q.transitions:
                     q.transitions.remove(self.transitions[index])
                     toFix.append(q)
-        self.circle.undraw()
-        self.circle = Circle(new, 20)
-        self.circle.setFill("yellow")
-        self.circle.draw(win)
+
         self.transitions[index].undraw()
         self.transitions[index] = Line(first, second)
         self.transitions[index].setArrow("last")
         for i in range(len(toFix)):
             toFix[i].add_transition(self.transitions[index])
-        self.transitions[index].draw(win)
+
+    def drawAll(self, win):
+        for i in range(len(self.transitions)):
+            self.transitions[i].draw(win)
 
 
 def init_window(win):
@@ -169,17 +171,26 @@ def processClick(win, clk, tool):
                 did_select = True
                 break
         if not did_select and transition_begin_state is not None:  # clicked in voidspace
-            transition_begin_state.setFill('yellow')
+            transition_begin_state.circle.setFill('yellow')
             transition_begin_state = None
 
     elif tool == 3:  # move state
         global move_begin_state  # prevent local namespace shadowing
         if move_begin_state is not None:  # relocate
-            #dx = clk.getX() - move_begin_state.center.getX()
-            #dy = clk.getY() - move_begin_state.center.getY()
+            dx = clk.getX() - move_begin_state.center.getX()
+            dy = clk.getY() - move_begin_state.center.getY()
+
+
 
             for i in range(len(move_begin_state.transitions)):
                 move_begin_state.redraw(i, clk, win)
+                move_begin_state.transitions[i].undraw()
+            move_begin_state.circle.undraw()
+            move_begin_state.circle = Circle(clk, 20)
+            move_begin_state.center = clk
+            move_begin_state.circle.setFill("yellow")
+            move_begin_state.circle.draw(win)
+            move_begin_state.drawAll(win)
 
             move_begin_state = None
             return
@@ -199,9 +210,6 @@ def processClick(win, clk, tool):
                 states.remove(q)
                 q.erase()
                 break
-
-
-
 
     else:  # undo, redo? other stuff
         print('tool not ready')
