@@ -1,0 +1,27 @@
+TASKS
+
+GENERAL 
+how to lambda character
+
+GRAPHICS
+Limit transitions to connecting edges of states instead of center
+Detect right-clicks and/or mousedrags
+
+TRANSITIONS
+labels (entryboxes)
+wider hitboxes
+
+STATE
+later: edit capability (after rightclick)
+state default names fix
+
+
+DFA
+-keep track of initial state
+-keep track of final states
+transition matrix??
+
+
+LATER
+file save/load
+
