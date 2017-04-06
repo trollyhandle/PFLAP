@@ -52,26 +52,35 @@ class State:
 
     def tcontains(self, index, click):
         first, second = self.transitions[index].getP1(), self.transitions[index].getP2()
-        firstx, firsty = first.getX(), first.getY()
-        secondx, secondy = second.getX(), second.getY()
-        cross = (click.getY() - firsty) * (secondx - firstx) - \
-                (click.getX() - firstx) * (secondy - firsty)
-        if abs(cross) != 0: return False
-
-        dot = (click.getX() - firstx) * (secondx - firstx) + \
-              (click.getY() - firsty) * (secondy - firsty)
-        if dot < 0: return False
-
-        squaredLen = (secondx - firstx) * (secondx - firstx) + \
-                     (secondy - firsty) * (secondy - firsty)
-        if dot > squaredLen: return False
-
-        return True
+        return (first.distanceTo(click) + second.distanceTo(click) == first.distanceTo(second))
 
     def erase(self):
         self.circle.undraw()
         for i in range(len(self.transitions)):
             self.transitions[i].undraw()
+
+    def redraw(self, index, new, win):
+        first, second = self.transitions[index].getP1(), self.transitions[index].getP2()
+        if (self.circle.contains(first)):
+            first = new
+        if (self.circle.contains(second)):
+            second = new
+        toFix = []
+        for q in reversed(states):
+            if self != q:
+                if self.transitions[index] in q.transitions:
+                    q.transitions.remove(self.transitions[index])
+                    toFix.append(q)
+        self.circle.undraw()
+        self.circle = Circle(new, 20)
+        self.circle.setFill("yellow")
+        self.circle.draw(win)
+        self.transitions[index].undraw()
+        self.transitions[index] = Line(first, second)
+        self.transitions[index].setArrow("last")
+        for i in range(len(toFix)):
+            toFix[i].add_transition(self.transitions[index])
+        self.transitions[index].draw(win)
 
 
 def init_window(win):
@@ -91,21 +100,6 @@ def init_window(win):
         tool_boxes.append(rect)
     tool_boxes[0].setOutline('blue')
     tool_boxes[0].setWidth(2)
-
-def isBetween(firstx, secondx, firsty, secondy, click):
-    cross = (click.getY() - firsty) * (secondx - firstx) - \
-            (click.getX(), firstx) * (secondy - firsty)
-    if abs(cross) != 0: return False
-
-    dot = (click.getX() - firstx) * (secondx - firstx) + \
-          (click.getY() - firsty) * (secondy - firsty)
-    if dot < 0: return False
-
-    squaredLen = (secondx - firstx) * (secondx - firstx) + \
-                 (secondy - firsty) * (secondy - firsty)
-    if dot > squaredLen: return False
-
-    return True
 
 def main():
     print('yay pflap')
@@ -154,7 +148,6 @@ def processClick(win, clk, tool):
         cir.setFill('yellow')
         cir.draw(win)
         new_state = State(clk, [], cir)
-        new_state.print()
         states.append(new_state)
 
     elif tool == 2:  # add transition
@@ -182,15 +175,17 @@ def processClick(win, clk, tool):
     elif tool == 3:  # move state
         global move_begin_state  # prevent local namespace shadowing
         if move_begin_state is not None:  # relocate
-            dx = clk.getX() - move_begin_state.getCenter().getX()
-            dy = clk.getY() - move_begin_state.getCenter().getY()
-            move_begin_state.move(dx, dy)
-            move_begin_state.setFill('yellow')
+            #dx = clk.getX() - move_begin_state.center.getX()
+            #dy = clk.getY() - move_begin_state.center.getY()
+
+            for i in range(len(move_begin_state.transitions)):
+                move_begin_state.redraw(i, clk, win)
+
             move_begin_state = None
             return
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
-            if q.contains(clk):
-                q.setFill('light blue')
+            if q.contain(clk):
+                q.circle.setFill('light blue')
                 move_begin_state = q
                 break
 
