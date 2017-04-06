@@ -23,8 +23,55 @@ tool_titles = ['Cursor', 'Add State', 'Add Transition', 'Move', 'Remove']
 states = []
 selected_state = None
 
+# Store transitions at some point
+state_points = []
+transitions = []
+
 transition_begin_state = None
 move_begin_state = None
+
+class State:
+    def __init__(self, center, transitions, circle):
+        self.center = center
+        self.transitions = transitions
+        self.circle = circle
+
+    def print(self):
+        print("center: ", self.center)
+        print("circle: ", self.circle)
+        print("number of trans: ", len(self.transitions))
+
+    def contain(self, point):
+        return self.circle.contains(point)
+
+    def add_transition(self, line):
+        self.transitions.append(line)
+
+    def get_points(self, index):
+        return self.transitions[index].getP1(), self.transitions[index].getP2()
+
+    def tcontains(self, index, click):
+        first, second = self.transitions[index].getP1(), self.transitions[index].getP2()
+        firstx, firsty = first.getX(), first.getY()
+        secondx, secondy = second.getX(), second.getY()
+        cross = (click.getY() - firsty) * (secondx - firstx) - \
+                (click.getX() - firstx) * (secondy - firsty)
+        if abs(cross) != 0: return False
+
+        dot = (click.getX() - firstx) * (secondx - firstx) + \
+              (click.getY() - firsty) * (secondy - firsty)
+        if dot < 0: return False
+
+        squaredLen = (secondx - firstx) * (secondx - firstx) + \
+                     (secondy - firsty) * (secondy - firsty)
+        if dot > squaredLen: return False
+
+        return True
+
+    def erase(self):
+        self.circle.undraw()
+        for i in range(len(self.transitions)):
+            self.transitions[i].undraw()
 
 
 def init_window(win):
@@ -45,6 +92,20 @@ def init_window(win):
     tool_boxes[0].setOutline('blue')
     tool_boxes[0].setWidth(2)
 
+def isBetween(firstx, secondx, firsty, secondy, click):
+    cross = (click.getY() - firsty) * (secondx - firstx) - \
+            (click.getX(), firstx) * (secondy - firsty)
+    if abs(cross) != 0: return False
+
+    dot = (click.getX() - firstx) * (secondx - firstx) + \
+          (click.getY() - firsty) * (secondy - firsty)
+    if dot < 0: return False
+
+    squaredLen = (secondx - firstx) * (secondx - firstx) + \
+                 (secondy - firsty) * (secondy - firsty)
+    if dot > squaredLen: return False
+
+    return True
 
 def main():
     print('yay pflap')
@@ -92,20 +153,25 @@ def processClick(win, clk, tool):
         cir = Circle(clk, 20)
         cir.setFill('yellow')
         cir.draw(win)
-        states.append(cir)
+        new_state = State(clk, [], cir)
+        new_state.print()
+        states.append(new_state)
 
     elif tool == 2:  # add transition
         did_select = False
         global transition_begin_state  # prevent local namespace shadowing
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
-            if q.contains(clk):
+            if q.contain(clk):
                 if transition_begin_state is None:  # first state
-                    q.setFill('blue')
+                    q.circle.setFill('blue')
                     transition_begin_state = q
                 else:  # second state
-                    ln = Line(transition_begin_state.getCenter(), q.getCenter())
+                    ln = Line(transition_begin_state.center, q.center)
+                    ln.setArrow("last")
                     ln.draw(win)
-                    transition_begin_state.setFill('yellow')
+                    transition_begin_state.add_transition(ln)
+                    q.add_transition(ln)
+                    transition_begin_state.circle.setFill('yellow')
                     transition_begin_state = None
                 did_select = True
                 break
@@ -128,12 +194,19 @@ def processClick(win, clk, tool):
                 move_begin_state = q
                 break
 
-    elif tool == 4:  # remove state
+    elif tool == 4:  # remove state or transition
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
-            if q.contains(clk):
+            for i in range(len(q.transitions)):
+                if q.tcontains(i, clk):
+                    q.transitions[i].undraw()
+                    del q.transitions[i]
+            if q.contain(clk):
                 states.remove(q)
-                q.undraw()
+                q.erase()
                 break
+
+
+
 
     else:  # undo, redo? other stuff
         print('tool not ready')
