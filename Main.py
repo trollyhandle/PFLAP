@@ -15,6 +15,7 @@ from graphics import *
 
 WIN_HEIGHT = 600
 WIN_WIDTH = 800
+CIR_RADIUS = 20
 
 toolbar_height = WIN_HEIGHT // 10
 
@@ -25,6 +26,7 @@ states = []
 selected_state = None
 
 # Store transitions at some point possibly in a dictionary
+# { (symbol, a, b) : [instate, outstate] }
 transition_table = dict()
 
 transition_begin_state = None
@@ -81,18 +83,18 @@ def processClick(win, clk, tool):
         global selected_state  # prevent local namespace shadowing
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
             if q.circle.contains(clk):
-                if selected_state is not None:
-                    selected_state.setFill('yellow')
+                if selected_state is not None and selected_state is not q: # so it doesn't switch b, y, b
+                    selected_state.circle.setFill('yellow')
                 selected_state = q
-                q.setFill('light blue')
+                q.circle.setFill('light blue')
                 did_select = True
                 break
         if not did_select and selected_state is not None:  # clicked in voidspace
-            selected_state.setFill('yellow')
+            selected_state.circle.setFill('yellow')
             selected_state = None
 
     elif tool == 1:  # add state
-        cir = Circle(clk, 20)
+        cir = Circle(clk, CIR_RADIUS)
         cir.setFill('yellow')
         cir.draw(win)
         new_state = State(clk, [], cir, "q" + str(len(states) + 1))
@@ -108,7 +110,9 @@ def processClick(win, clk, tool):
                     q.circle.setFill('blue')
                     transition_begin_state = q
                 else:  # second state
-                    ln = Line(transition_begin_state.center, q.center)
+                    line_first = movePoints(transition_begin_state.center, q.center)
+                    line_second = movePoints(q.center, transition_begin_state.center)
+                    ln = Line(line_first, line_second)
                     ln.setArrow("last")
                     ln.draw(win)
 
@@ -128,10 +132,16 @@ def processClick(win, clk, tool):
 
             for i in range(len(move_begin_state.transitions)):
                 first, second = move_begin_state.transitions[i].getP1(), move_begin_state.transitions[i].getP2()
-                if (move_begin_state.circle.contains(first)):
+                if (move_begin_state.circle.contains(first)): # transition out of
                     first = clk
-                if (move_begin_state.circle.contains(second)):
+                    line_first = movePoints(first, second)
+                    # TODO: Get center of second state, use movePoints(first, secondState.center)
+                    line_second = second
+                if (move_begin_state.circle.contains(second)): # transition into
                     second = clk
+                    # TODO: Get center of first state, use movePoints(firstState.center, second)
+                    line_first = first
+                    line_second = movePoints(second, first)
 
                 toFix = []
                 for q in reversed(states):
@@ -141,15 +151,15 @@ def processClick(win, clk, tool):
                             toFix.append(q)
 
                 move_begin_state.transitions[i].undraw()
-                move_begin_state.transitions[i] = Line(first, second)
+                move_begin_state.transitions[i] = Line(line_first, line_second)
                 move_begin_state.transitions[i].setArrow("last")
                 for j in range(len(toFix)):
                     toFix[j].add_transition(move_begin_state.transitions[i])
 
-                move_begin_state.transitions[i].undraw()
+                #move_begin_state.transitions[i].undraw()
             move_begin_state.circle.undraw()
             move_begin_state.label.undraw()
-            move_begin_state.circle = Circle(clk, 20)
+            move_begin_state.circle = Circle(clk, CIR_RADIUS)
             move_begin_state.center = clk
             move_begin_state.label = Text(clk, move_begin_state.name)
             move_begin_state.circle.setFill("yellow")
@@ -159,7 +169,7 @@ def processClick(win, clk, tool):
             move_begin_state = None
             return
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
-            if q.contain(clk):
+            if q.circle.contains(clk):
                 q.circle.setFill('light blue')
                 move_begin_state = q
                 break
@@ -178,6 +188,21 @@ def processClick(win, clk, tool):
 
     else:  # undo, redo? other stuff
         print('tool not ready')
+
+def movePoints(first, second):
+    """
+    Takes two points and returns a point that is distance t from first point
+    """
+    d = math.sqrt( ((second.getX() - first.getX()) ** 2) +
+                   ((second.getY() - first.getY()) ** 2) )
+    t = (CIR_RADIUS - 1)/d
+    point = Point( ( ((1 - t) * (first.getX())) + (t * second.getX())),
+                   (((1 - t) * (first.getY())) + (t * second.getY())) )
+    return point
+
+
+
+
 
 
 main()
