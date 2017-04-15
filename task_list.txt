@@ -5,7 +5,7 @@ how to lambda character -- Just copy and paste λ !!
 
 GRAPHICS
 Limit transitions to connecting edges of states instead of center
-Detect right-clicks and/or mousedrags
+Detect right-clicks and/or mouse drags
 
 TRANSITIONS
 labels (entryboxes)

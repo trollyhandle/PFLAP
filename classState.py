@@ -5,6 +5,7 @@
 
 from graphics import *
 
+
 class State:
     # Class variables:
     #   circle : the circle object graphically representing this state
@@ -13,7 +14,8 @@ class State:
     #   center : Point(x, y) of which the state is centered
     #   name : the name for this state. defaults to q0, q1, ... qn
     #   label : textbox displaying name of state on circle
-    #   transitions : list of transitions going in or out of this state
+    #   transitions_in[] : list of transitions going in or out of this state
+    #   transitions_out[] : list of transitions going to this state
 
     def __init__(self, center, transitions, circle, name):
         self.final = False
@@ -30,18 +32,45 @@ class State:
         print("number of trans: ", len(self.transitions))
 
     def add_transition(self, line):
-        line.setArrow("last")
         self.transitions.append(line)
 
     def tcontains(self, index, click):
-        first, second = self.transitions[index].getP1(), self.transitions[index].getP2()
+        first, second = self.transitions[index].line.getP1(), self.transitions[index].line.getP2()
         return (first.distanceTo(click) + second.distanceTo(click) == first.distanceTo(second))
 
     def erase(self):
+        self.transitions = []
         self.circle.undraw()
+        self.label.undraw()
         for i in range(len(self.transitions)):
-            self.transitions[i].undraw()
+            self.transitions[i].line.undraw()
 
     def drawAll(self, win):
         for i in range(len(self.transitions)):
-            self.transitions[i].draw(win)
+            self.transitions[i].line.draw(win)
+
+class Transition:
+    # Initialize
+    def __init__(self, outState, inState, symbols, line):
+        self.line = line
+        self.inState = inState
+        self.outState = outState
+        self.symbols = symbols
+
+    # Get first state's center
+    def firstCenter(self):
+        return self.outState.center
+
+    # Get second state's center
+    def secondCenter(self):
+        return self.inState.center
+
+    # Draw
+    def draw(self, win):
+        self.line.draw(win)
+
+    # Erase
+    def undraw(self):
+        self.line.undraw()
+
+

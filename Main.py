@@ -11,6 +11,7 @@
 #   On two N/DFA inputs: union, intersect, difference, test equivalence
 
 from classState import State
+from classState import Transition
 from graphics import *
 
 WIN_HEIGHT = 600
@@ -27,7 +28,7 @@ selected_state = None
 
 # Store transitions at some point possibly in a dictionary
 # { (symbol, a, b) : [instate, outstate] }
-transition_table = dict()
+transitions = []
 
 transition_begin_state = None
 move_begin_state = None
@@ -110,14 +111,20 @@ def processClick(win, clk, tool):
                     q.circle.setFill('blue')
                     transition_begin_state = q
                 else:  # second state
+                    # Draw the transition
                     line_first = movePoints(transition_begin_state.center, q.center)
                     line_second = movePoints(q.center, transition_begin_state.center)
                     ln = Line(line_first, line_second)
                     ln.setArrow("last")
                     ln.draw(win)
 
-                    transition_begin_state.add_transition(ln)
-                    q.add_transition(ln)
+                    # Make Transition object
+                    trans = Transition(transition_begin_state, q, [], ln)
+                    transitions.append(trans)
+
+                    # Add transition to each state -- used to app ln
+                    transition_begin_state.add_transition(trans)
+                    q.add_transition(trans)
                     transition_begin_state.circle.setFill('yellow')
                     transition_begin_state = None
                 did_select = True
@@ -129,42 +136,49 @@ def processClick(win, clk, tool):
     elif tool == 3:  # move state
         global move_begin_state  # prevent local namespace shadowing
         if move_begin_state is not None:  # relocate
-
+            ins = []
+            outs = []
             for i in range(len(move_begin_state.transitions)):
-                first, second = move_begin_state.transitions[i].getP1(), move_begin_state.transitions[i].getP2()
-                if (move_begin_state.circle.contains(first)): # transition out of
-                    first = clk
-                    line_first = movePoints(first, second)
-                    # TODO: Get center of second state, use movePoints(first, secondState.center)
-                    line_second = second
-                if (move_begin_state.circle.contains(second)): # transition into
-                    second = clk
-                    # TODO: Get center of first state, use movePoints(firstState.center, second)
-                    line_first = first
-                    line_second = movePoints(second, first)
-
-                toFix = []
-                for q in reversed(states):
+                for q in reversed(states):  # Temp remove transition from all states
                     if move_begin_state != q:
                         if move_begin_state.transitions[i] in q.transitions:
                             q.transitions.remove(move_begin_state.transitions[i])
-                            toFix.append(q)
+                            if (move_begin_state.transitions[i].inState == q):
+                                ins.append(q)
+                            else:
+                                outs.append(q)
+                transitions.remove(move_begin_state.transitions[i])
 
-                move_begin_state.transitions[i].undraw()
-                move_begin_state.transitions[i] = Line(line_first, line_second)
-                move_begin_state.transitions[i].setArrow("last")
-                for j in range(len(toFix)):
-                    toFix[j].add_transition(move_begin_state.transitions[i])
-
-                #move_begin_state.transitions[i].undraw()
-            move_begin_state.circle.undraw()
-            move_begin_state.label.undraw()
+            # Redraw and update state
+            move_begin_state.erase()
             move_begin_state.circle = Circle(clk, CIR_RADIUS)
             move_begin_state.center = clk
             move_begin_state.label = Text(clk, move_begin_state.name)
             move_begin_state.circle.setFill("yellow")
             move_begin_state.circle.draw(win)
             move_begin_state.label.draw(win)
+
+            for i in range(len(ins)):   # Update where move_begin_state is the outState
+                line_first = movePoints(move_begin_state.center, ins[i].center)
+                line_second = movePoints(ins[i].center, move_begin_state.center)
+                ln = Line(line_first, line_second)
+                ln.setArrow("last")
+                trans = Transition(move_begin_state, ins[i], [], ln)
+                move_begin_state.add_transition(trans)
+                ins[i].add_transition(trans)
+                transitions.append(trans)
+
+            for i in range(len(outs)):  # Update where move_begin_state is the inState
+                line_first = movePoints(outs[i].center, move_begin_state.center)
+                line_second = movePoints(move_begin_state.center, outs[i].center)
+                ln = Line(line_first, line_second)
+                ln.setArrow("last")
+                trans = Transition(outs[i], move_begin_state, [], ln)
+                move_begin_state.add_transition(trans)
+                outs[i].add_transition(trans)
+                transitions.append(trans)
+
+            # Redraw all transitions in and out of state
             move_begin_state.drawAll(win)
             move_begin_state = None
             return
@@ -195,7 +209,7 @@ def movePoints(first, second):
     """
     d = math.sqrt( ((second.getX() - first.getX()) ** 2) +
                    ((second.getY() - first.getY()) ** 2) )
-    t = (CIR_RADIUS - 1)/d
+    t = (CIR_RADIUS - .1)/d
     point = Point( ( ((1 - t) * (first.getX())) + (t * second.getX())),
                    (((1 - t) * (first.getY())) + (t * second.getY())) )
     return point
