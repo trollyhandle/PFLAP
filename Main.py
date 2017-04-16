@@ -12,6 +12,7 @@
 
 from classState import State
 from classState import Transition
+from DFA import Node
 from graphics import *
 
 WIN_HEIGHT = 600
@@ -78,19 +79,24 @@ def main():
             processClick(win, clk_pt, active_tool)
 
 
+def find_containing_state(clk):
+    # run backwards to preserve expected ordering (top-to-bottom)
+    for q in reversed(states):
+        if q.tcontains(clk):
+            return q
+    return None
+
+
 def processClick(win, clk, tool):
     if tool == 0:  # cursor (edit state/transition)
-        did_select = False
         global selected_state  # prevent local namespace shadowing
-        for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
-            if q.circle.contains(clk):
-                if selected_state is not None and selected_state is not q: # so it doesn't switch b, y, b
-                    selected_state.circle.setFill('yellow')
-                selected_state = q
-                q.circle.setFill('light blue')
-                did_select = True
-                break
-        if not did_select and selected_state is not None:  # clicked in voidspace
+        q = find_containing_state(clk)
+        if q is not None:
+            if selected_state is not None and selected_state is not q:  # so it doesn't switch b, y, b
+                selected_state.circle.setFill('yellow')
+            selected_state = q
+            q.circle.setFill('light blue')
+        elif selected_state is not None:  # clicked in voidspace
             selected_state.circle.setFill('yellow')
             selected_state = None
 
@@ -202,6 +208,7 @@ def processClick(win, clk, tool):
 
     else:  # undo, redo? other stuff
         print('tool not ready')
+
 
 def movePoints(first, second):
     """
