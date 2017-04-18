@@ -10,9 +10,7 @@
 #   Convert NFA to DFA
 #   On two N/DFA inputs: union, intersect, difference, test equivalence
 
-from classState import State
-from classState import Transition
-from DFA import Node
+from classState import *
 from graphics import *
 
 WIN_HEIGHT = 600
@@ -82,7 +80,7 @@ def main():
 def find_containing_state(clk):
     # run backwards to preserve expected ordering (top-to-bottom)
     for q in reversed(states):
-        if q.tcontains(clk):
+        if q.circle.contains(clk):
             return q
     return None
 
@@ -217,13 +215,9 @@ def movePoints(first, second):
     d = math.sqrt( ((second.getX() - first.getX()) ** 2) +
                    ((second.getY() - first.getY()) ** 2) )
     t = (CIR_RADIUS - .1)/d
-    point = Point( ( ((1 - t) * (first.getX())) + (t * second.getX())),
+    point = Point( (((1 - t) * (first.getX())) + (t * second.getX())),
                    (((1 - t) * (first.getY())) + (t * second.getY())) )
     return point
-
-
-
-
 
 
 main()
