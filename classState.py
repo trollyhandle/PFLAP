@@ -38,7 +38,7 @@ class State:
         first, second = self.transitions[index].line.getP1(), self.transitions[index].line.getP2()
         return (first.distanceTo(click) + second.distanceTo(click) == first.distanceTo(second))
 
-    def erase(self, win):
+    def erase(self):
         self.circle.undraw()
         self.label.undraw()
         for i in range(len(self.transitions)):

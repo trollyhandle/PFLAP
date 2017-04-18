@@ -140,12 +140,12 @@ def processClick(win, clk, tool):
                 ln.draw(win)
 
                 #TODO: Temp way to store/print input symbols -- Put lambda if none
-                    inSymbols = input("Input transition symbol(s): ")
-                    symbols = inSymbols.split()
+                inSymbols = input("Input transition symbol(s): ")
+                symbols = inSymbols.split()
 
                     # Make Transition object
                 trans = Transition(transition_begin_state, q, symbols, ln)
-                    trans.drawSymbols(win)
+                trans.drawSymbols(win)
                 transitions.append(trans)
 
                 # Add transition to each state -- used to app ln
