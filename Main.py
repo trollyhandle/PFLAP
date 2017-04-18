@@ -10,16 +10,16 @@
 #   Convert NFA to DFA
 #   On two N/DFA inputs: union, intersect, difference, test equivalence
 
-from classState import State
-from classState import Transition
+from classState import *
 from graphics import *
 
 WIN_HEIGHT = 600
 WIN_WIDTH = 800
 CIR_RADIUS = 20
 
-toolbar_height = WIN_HEIGHT // 10
+toolbar_height = WIN_HEIGHT // 12
 
+active_tool = 0
 tool_boxes = []
 tool_titles = ['Cursor', 'Add State', 'Add Transition', 'Move', 'Remove']
 
@@ -42,56 +42,76 @@ def init_window(win):
     border.setWidth(3)
     border.draw(win)
 
+    def gen_callback(idx):  # create closure!
+        return lambda: switchActiveButton(idx)
+
     for i in range(len(tool_titles)):
         rect = Rectangle(Point(i*toolbar_box_width+padding, padding),
                          Point((i+1)*toolbar_box_width-padding, toolbar_height-padding))
         rect.draw(win)
-        txt = Text(rect.getCenter(), tool_titles[i])
-        txt.draw(win)
         tool_boxes.append(rect)
+
+        b_test = tk.Button(win, text=tool_titles[i], command=gen_callback(i))
+        win.create_window(rect.getCenter().x, rect.getCenter().y, window=b_test)
+
     tool_boxes[0].setOutline('blue')
     tool_boxes[0].setWidth(2)
+
+
+def configRightClicks(win):
+    initial = tk.BooleanVar()
+    initial.set(False)
+    win.rightMenu.add_command(label='Count Nodes', command=lambda: print('node count:', len(states)))
+    win.rightMenu.add_checkbutton(label='check_test', variable=initial, command=lambda: print('check', initial.get()))
+
+
+def switchActiveButton(next):
+    global active_tool
+    tool_boxes[active_tool].setOutline('black')
+    tool_boxes[active_tool].setWidth(1)
+    tool_boxes[next].setOutline('blue')
+    tool_boxes[next].setWidth(2)
+    active_tool = next
+    return next
 
 
 def main():
     print('yay pflap')
 
-    win = GraphWin('PFLAP', WIN_WIDTH, WIN_HEIGHT)
+    win = GraphWin('PFLAP', WIN_WIDTH, WIN_HEIGHT, autoflush=False)
     init_window(win)
 
-    active_tool = 0
+    configRightClicks(win)
+
     while True:
         try:
             clk_pt = win.getMouse()
         except GraphicsError:  # basically, closed window
             win.close()
-            break  # aka return aka end of the line
+            break  # aka return aka END OF THE LINE
 
-        if clk_pt.getY() < toolbar_height:
-            for i, box in enumerate(tool_boxes):
-                if box.contains(clk_pt):
-                    tool_boxes[active_tool].setOutline('black')
-                    tool_boxes[active_tool].setWidth(1)
-                    box.setOutline('blue')
-                    box.setWidth(2)
-                    active_tool = i
-        else:
+        if clk_pt.getY() > toolbar_height:
             processClick(win, clk_pt, active_tool)
+
+
+def find_containing_state(clk):
+    # run backwards to preserve expected ordering (top-to-bottom)
+    for q in reversed(states):
+        if q.circle.contains(clk):
+            return q
+    return None
 
 
 def processClick(win, clk, tool):
     if tool == 0:  # cursor (edit state/transition)
-        did_select = False
         global selected_state  # prevent local namespace shadowing
-        for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
-            if q.circle.contains(clk):
-                if selected_state is not None and selected_state is not q: # so it doesn't switch b, y, b
-                    selected_state.circle.setFill('yellow')
-                selected_state = q
-                q.circle.setFill('light blue')
-                did_select = True
-                break
-        if not did_select and selected_state is not None:  # clicked in voidspace
+        q = find_containing_state(clk)
+        if q is not None:
+            if selected_state is not None and selected_state is not q:  # so it doesn't switch b, y, b
+                selected_state.circle.setFill('yellow')
+            selected_state = q
+            q.circle.setFill('light blue')
+        elif selected_state is not None:  # clicked in voidspace
             selected_state.circle.setFill('yellow')
             selected_state = None
 
@@ -104,38 +124,37 @@ def processClick(win, clk, tool):
         states.append(new_state)
 
     elif tool == 2:  # add transition
-        did_select = False
         global transition_begin_state  # prevent local namespace shadowing
-        for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
-            if q.circle.contains(clk):
-                if transition_begin_state is None:  # first state
-                    q.circle.setFill('blue')
-                    transition_begin_state = q
-                else:  # second state
-                    # Draw the transition
-                    line_first = movePoints(transition_begin_state.center, q.center)
-                    line_second = movePoints(q.center, transition_begin_state.center)
-                    ln = Line(line_first, line_second)
-                    ln.setArrow("last")
-                    ln.draw(win)
 
-                    #TODO: Temp way to store/print input symbols -- Put lambda if none
+        q = find_containing_state(clk)
+        if q is not None:
+            if transition_begin_state is None:  # first state
+                q.circle.setFill('blue')
+                transition_begin_state = q
+            else:  # second state
+                # Draw the transition
+                line_first = movePoints(transition_begin_state.center, q.center)
+                line_second = movePoints(q.center, transition_begin_state.center)
+                ln = Line(line_first, line_second)
+                ln.setArrow("last")
+                ln.draw(win)
+
+                #TODO: Temp way to store/print input symbols -- Put lambda if none
                     inSymbols = input("Input transition symbol(s): ")
                     symbols = inSymbols.split()
 
                     # Make Transition object
-                    trans = Transition(transition_begin_state, q, symbols, ln)
+                trans = Transition(transition_begin_state, q, symbols, ln)
                     trans.drawSymbols(win)
-                    transitions.append(trans)
+                transitions.append(trans)
 
-                    # Add transition to each state -- used to app ln
-                    transition_begin_state.add_transition(trans)
-                    q.add_transition(trans)
-                    transition_begin_state.circle.setFill('yellow')
-                    transition_begin_state = None
-                did_select = True
-                break
-        if not did_select and transition_begin_state is not None:  # clicked in voidspace
+                # Add transition to each state -- used to app ln
+                transition_begin_state.add_transition(trans)
+                q.add_transition(trans)
+                transition_begin_state.circle.setFill('yellow')
+                transition_begin_state = None
+
+        elif transition_begin_state is not None:  # clicked in voidspace
             transition_begin_state.circle.setFill('yellow')
             transition_begin_state = None
 
@@ -160,7 +179,7 @@ def processClick(win, clk, tool):
                 transitions.remove(move_begin_state.transitions[i])
 
             # Redraw and update state
-            move_begin_state.erase(win)
+            move_begin_state.erase()
             move_begin_state.circle = Circle(clk, CIR_RADIUS)
             move_begin_state.center = clk
             move_begin_state.label = Text(clk, move_begin_state.name)
@@ -194,11 +213,10 @@ def processClick(win, clk, tool):
             move_begin_state.drawAll(win)
             move_begin_state = None
             return
-        for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
-            if q.circle.contains(clk):
-                q.circle.setFill('light blue')
-                move_begin_state = q
-                break
+        q = find_containing_state(clk)
+        if q is not None:
+            q.circle.setFill('light blue')
+            move_begin_state = q
 
     elif tool == 4:  # remove state or transition
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
@@ -209,21 +227,23 @@ def processClick(win, clk, tool):
             if q.circle.contains(clk):
                 q.label.undraw()
                 states.remove(q)
-                q.erase(win)
+                q.erase()
                 break
 
     else:  # undo, redo? other stuff
         print('tool not ready')
+    win.flush()  # force update after any visual changes
+
 
 def movePoints(first, second):
     """
     Takes two points and returns a point that is distance t from first point
     """
-    d = math.sqrt( ((second.getX() - first.getX()) ** 2) +
-                   ((second.getY() - first.getY()) ** 2) )
+    d = math.sqrt(((second.getX() - first.getX()) ** 2) +
+                  ((second.getY() - first.getY()) ** 2))
     t = (CIR_RADIUS - .1)/d
-    point = Point( ( ((1 - t) * (first.getX())) + (t * second.getX())),
-                   (((1 - t) * (first.getY())) + (t * second.getY())) )
+    point = Point((((1 - t) * (first.getX())) + (t * second.getX())),
+                  (((1 - t) * (first.getY())) + (t * second.getY())))
     return point
 
 

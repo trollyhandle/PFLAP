@@ -189,6 +189,14 @@ class GraphWin(tk.Canvas):
         self.mouseX = None
         self.mouseY = None
         self.bind("<Button-1>", self._onClick)
+        if True:  # todo True -> laptop; False -> desktop
+            self.bind("<Button-2>", self._onRightClick)
+            self.bind("<Button-3>", lambda x: print('unsupported button'))
+        else:
+            self.bind("<Button-2>", lambda x: print('unsupported button'))
+            self.bind("<Button-3>", self._onRightClick)
+        self._designRightClickMenu()
+
         self.height = height
         self.width = width
         self.autoflush = autoflush
@@ -197,7 +205,13 @@ class GraphWin(tk.Canvas):
         self.closed = False
         master.lift()
         if autoflush: _root.update()
-     
+
+    def _designRightClickMenu(self):
+        self.rightMenu = tk.Menu(_root)
+        _root.config(menu=self.rightMenu)
+        self.rightMenu.add_command(label='Test1', command=lambda:print('Clicked "Test1"'))
+        self.rightMenu.add_command(label='Test2', command=lambda:print('Clicked "Test2"'))
+
     def __checkOpen(self):
         if self.closed:
             raise GraphicsError("window is closed")
@@ -207,7 +221,7 @@ class GraphWin(tk.Canvas):
         self.__checkOpen()
         self.config(bg=color)
         self.__autoflush()
-        
+
     def setCoords(self, x1, y1, x2, y2):
         """Set coordinates of window to run from (x1,y1) in the
         lower-left corner to (x2,y2) in the upper-right corner."""
@@ -221,39 +235,35 @@ class GraphWin(tk.Canvas):
         self.master.destroy()
         self.__autoflush()
 
-
     def isClosed(self):
         return self.closed
 
-
     def isOpen(self):
         return not self.closed
-
 
     def __autoflush(self):
         if self.autoflush:
             _root.update()
 
-    
     def plot(self, x, y, color="black"):
         """Set pixel (x,y) to the given color"""
         self.__checkOpen()
         xs,ys = self.toScreen(x,y)
         self.create_line(xs,ys,xs+1,ys, fill=color)
         self.__autoflush()
-        
+
     def plotPixel(self, x, y, color="black"):
         """Set pixel raw (independent of window coordinates) pixel
         (x,y) to color"""
         self.__checkOpen()
         self.create_line(x,y,x+1,y, fill=color)
         self.__autoflush()
-      
+
     def flush(self):
         """Update drawing to the window"""
         self.__checkOpen()
         self.update_idletasks()
-        
+
     def getMouse(self):
         """Wait for mouse click and return Point object representing
         the click"""
@@ -282,37 +292,41 @@ class GraphWin(tk.Canvas):
             return Point(x,y)
         else:
             return None
-            
+
     def getHeight(self):
         """Return the height of the window"""
         return self.height
-        
+
     def getWidth(self):
         """Return the width of the window"""
         return self.width
-    
+
     def toScreen(self, x, y):
         trans = self.trans
         if trans:
             return self.trans.screen(x,y)
         else:
             return x,y
-                      
+
     def toWorld(self, x, y):
         trans = self.trans
         if trans:
             return self.trans.world(x,y)
         else:
             return x,y
-        
+
     def setMouseHandler(self, func):
         self._mouseCallback = func
-        
+
     def _onClick(self, e):
         self.mouseX = e.x
         self.mouseY = e.y
         if self._mouseCallback:
-            self._mouseCallback(Point(e.x, e.y)) 
+            self._mouseCallback(Point(e.x, e.y))
+
+    def _onRightClick(self, e):
+        self.rightMenu.post(e.x_root, e.y_root)
+
                       
 class Transform:
 
