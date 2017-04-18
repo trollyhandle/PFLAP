@@ -125,7 +125,7 @@ def processClick(win, clk, tool):
 
                     # Make Transition object
                     trans = Transition(transition_begin_state, q, symbols, ln)
-                    trans.drawSymobls(win)
+                    trans.drawSymbols(win)
                     transitions.append(trans)
 
                     # Add transition to each state -- used to app ln
@@ -174,7 +174,7 @@ def processClick(win, clk, tool):
                 ln = Line(line_first, line_second)
                 ln.setArrow("last")
                 trans = Transition(move_begin_state, ins[i], ti[i], ln)    # Find way to keep symbols
-                trans.drawSymobls(win)
+                trans.drawSymbols(win)
                 move_begin_state.add_transition(trans)
                 ins[i].add_transition(trans)
                 transitions.append(trans)
@@ -185,7 +185,7 @@ def processClick(win, clk, tool):
                 ln = Line(line_first, line_second)
                 ln.setArrow("last")
                 trans = Transition(outs[i], move_begin_state, to[i], ln)   # Find way to keep symbols
-                trans.drawSymobls(win)
+                trans.drawSymbols(win)
                 move_begin_state.add_transition(trans)
                 outs[i].add_transition(trans)
                 transitions.append(trans)

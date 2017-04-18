@@ -42,7 +42,7 @@ class State:
         self.circle.undraw()
         self.label.undraw()
         for i in range(len(self.transitions)):
-            self.transitions[i].undraw(win)
+            self.transitions[i].undraw()
         self.transitions = []
 
     def drawAll(self, win):
@@ -74,20 +74,13 @@ class Transition:
         self.line.draw(win)
 
     # Erase
-    def undraw(self, win):
+    def undraw(self):
         self.line.undraw()
         self.text.undraw()
 
-    def drawSymobls(self, win):
-        s = ""
-        for i in range(len(self.symbols)):
-            if i == len(self.symbols) - 1:
-                s += self.symbols[i]
-            else:
-                s += self.symbols[i] + ", "
+    def drawSymbols(self, win):
+        s = ", ".join(self.symbols)
         point = Point(self.line.getCenter().getX(), self.line.getCenter().getY() - 10)
         textSymbol = Text(point, s)
         textSymbol.draw(win)
         self.text = textSymbol
-
-
