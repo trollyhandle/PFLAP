@@ -38,16 +38,17 @@ class State:
         first, second = self.transitions[index].line.getP1(), self.transitions[index].line.getP2()
         return (first.distanceTo(click) + second.distanceTo(click) == first.distanceTo(second))
 
-    def erase(self):
-        self.transitions = []
+    def erase(self, win):
         self.circle.undraw()
         self.label.undraw()
         for i in range(len(self.transitions)):
-            self.transitions[i].line.undraw()
+            self.transitions[i].undraw(win)
+        self.transitions = []
 
     def drawAll(self, win):
         for i in range(len(self.transitions)):
             self.transitions[i].line.draw(win)
+            #self.transitions[i].text.draw(win)
 
 class Transition:
     # Initialize
@@ -55,7 +56,10 @@ class Transition:
         self.line = line
         self.inState = inState
         self.outState = outState
-        self.symbols = symbols
+        self.symbols = []
+        for i in symbols:
+            self.symbols.append(i)
+        self.text = ""
 
     # Get first state's center
     def firstCenter(self):
@@ -70,7 +74,20 @@ class Transition:
         self.line.draw(win)
 
     # Erase
-    def undraw(self):
+    def undraw(self, win):
         self.line.undraw()
+        self.text.undraw()
+
+    def drawSymobls(self, win):
+        s = ""
+        for i in range(len(self.symbols)):
+            if i == len(self.symbols) - 1:
+                s += self.symbols[i]
+            else:
+                s += self.symbols[i] + ", "
+        point = Point(self.line.getCenter().getX(), self.line.getCenter().getY() - 10)
+        textSymbol = Text(point, s)
+        textSymbol.draw(win)
+        self.text = textSymbol
 
 

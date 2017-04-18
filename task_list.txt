@@ -1,26 +1,24 @@
 TASKS
 
 GENERAL 
-how to lambda character -- Just copy and paste λ !!
+✓ how to lambda character -- Just copy and paste λ !!
 
 GRAPHICS
-Limit transitions to connecting edges of states instead of center
-Detect right-clicks and/or mouse drags
+✓ Limit transitions to connecting edges of states instead of center
+✓ Detect right-clicks and/or mouse drags
 
 TRANSITIONS
 labels (entryboxes)
 wider hitboxes
 
 STATE
-later: edit capability (after rightclick)
+later: edit capability (after right-click)
 state default names fix
 
-
 DFA
--keep track of initial state
--keep track of final states
-transition matrix??
-
+✓ keep track of initial state
+✓ keep track of final states
+✓ transition matrix
 
 LATER
 file save/load

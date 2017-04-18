@@ -52,6 +52,7 @@ def init_window(win):
     tool_boxes[0].setOutline('blue')
     tool_boxes[0].setWidth(2)
 
+
 def main():
     print('yay pflap')
 
@@ -118,8 +119,13 @@ def processClick(win, clk, tool):
                     ln.setArrow("last")
                     ln.draw(win)
 
+                    #TODO: Temp way to store/print input symbols -- Put lambda if none
+                    inSymbols = input("Input transition symbol(s): ")
+                    symbols = inSymbols.split()
+
                     # Make Transition object
-                    trans = Transition(transition_begin_state, q, [], ln)
+                    trans = Transition(transition_begin_state, q, symbols, ln)
+                    trans.drawSymobls(win)
                     transitions.append(trans)
 
                     # Add transition to each state -- used to app ln
@@ -138,19 +144,23 @@ def processClick(win, clk, tool):
         if move_begin_state is not None:  # relocate
             ins = []
             outs = []
+            ti = []
+            to = []
             for i in range(len(move_begin_state.transitions)):
                 for q in reversed(states):  # Temp remove transition from all states
                     if move_begin_state != q:
                         if move_begin_state.transitions[i] in q.transitions:
-                            q.transitions.remove(move_begin_state.transitions[i])
                             if (move_begin_state.transitions[i].inState == q):
+                                ti.append(move_begin_state.transitions[i].symbols)
                                 ins.append(q)
                             else:
+                                to.append(move_begin_state.transitions[i].symbols)
                                 outs.append(q)
+                            q.transitions.remove(move_begin_state.transitions[i])
                 transitions.remove(move_begin_state.transitions[i])
 
             # Redraw and update state
-            move_begin_state.erase()
+            move_begin_state.erase(win)
             move_begin_state.circle = Circle(clk, CIR_RADIUS)
             move_begin_state.center = clk
             move_begin_state.label = Text(clk, move_begin_state.name)
@@ -163,7 +173,8 @@ def processClick(win, clk, tool):
                 line_second = movePoints(ins[i].center, move_begin_state.center)
                 ln = Line(line_first, line_second)
                 ln.setArrow("last")
-                trans = Transition(move_begin_state, ins[i], [], ln)
+                trans = Transition(move_begin_state, ins[i], ti[i], ln)    # Find way to keep symbols
+                trans.drawSymobls(win)
                 move_begin_state.add_transition(trans)
                 ins[i].add_transition(trans)
                 transitions.append(trans)
@@ -173,7 +184,8 @@ def processClick(win, clk, tool):
                 line_second = movePoints(move_begin_state.center, outs[i].center)
                 ln = Line(line_first, line_second)
                 ln.setArrow("last")
-                trans = Transition(outs[i], move_begin_state, [], ln)
+                trans = Transition(outs[i], move_begin_state, to[i], ln)   # Find way to keep symbols
+                trans.drawSymobls(win)
                 move_begin_state.add_transition(trans)
                 outs[i].add_transition(trans)
                 transitions.append(trans)
@@ -197,7 +209,7 @@ def processClick(win, clk, tool):
             if q.circle.contains(clk):
                 q.label.undraw()
                 states.remove(q)
-                q.erase()
+                q.erase(win)
                 break
 
     else:  # undo, redo? other stuff
@@ -213,10 +225,6 @@ def movePoints(first, second):
     point = Point( ( ((1 - t) * (first.getX())) + (t * second.getX())),
                    (((1 - t) * (first.getY())) + (t * second.getY())) )
     return point
-
-
-
-
 
 
 main()
