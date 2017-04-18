@@ -189,6 +189,7 @@ class GraphWin(tk.Canvas):
         self.mouseX = None
         self.mouseY = None
         self.bind("<Button-1>", self._onClick)
+        self.bind("<Button-3>", self._onRightClick)
         self.height = height
         self.width = width
         self.autoflush = autoflush
@@ -196,6 +197,9 @@ class GraphWin(tk.Canvas):
         self.trans = None
         self.closed = False
         master.lift()
+
+        self.rightMenu = tk.Menu(_root)
+        self.rightMenu.add_command(label='Test', command=lambda:print('yes'))
         if autoflush: _root.update()
      
     def __checkOpen(self):
@@ -312,7 +316,11 @@ class GraphWin(tk.Canvas):
         self.mouseX = e.x
         self.mouseY = e.y
         if self._mouseCallback:
-            self._mouseCallback(Point(e.x, e.y)) 
+            self._mouseCallback(Point(e.x, e.y))
+
+    def _onRightClick(self, e):
+        self.rightMenu.post(e.x_root, e.y_root)
+
                       
 class Transform:
 
