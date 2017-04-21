@@ -27,7 +27,6 @@ states = []
 selected_state = None
 
 # Store transitions at some point possibly in a dictionary
-# { (symbol, a, b) : [instate, outstate] }
 transitions = []
 
 transition_begin_state = None
@@ -51,9 +50,8 @@ def init_window(win):
         rect.draw(win)
         tool_boxes.append(rect)
 
-        button_width = 15
-        button = tk.Button(win, text=tool_titles[i], command=gen_callback(i), width=button_width)
-        win.create_window(rect.getCenter().x, rect.getCenter().y, window=button)
+        b_test = tk.Button(win, text=tool_titles[i], width= 15, command=gen_callback(i))
+        win.create_window(rect.getCenter().x, rect.getCenter().y, window=b_test)
 
     tool_boxes[0].setOutline('blue')
     tool_boxes[0].setWidth(2)
