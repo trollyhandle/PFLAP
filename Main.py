@@ -12,6 +12,7 @@
 
 from classState import *
 from graphics import *
+from DFA import *
 
 WIN_HEIGHT = 600
 WIN_WIDTH = 800
@@ -115,11 +116,9 @@ def processClick(win, clk, tool):
             selected_state = None
 
     elif tool == 1:  # add state
-        cir = Circle(clk, CIR_RADIUS)
-        cir.setFill('yellow')
-        cir.draw(win)
-        new_state = State(clk, [], cir, "q" + str(len(states) + 1))
-        new_state.label.draw(win)
+
+        new_state = State(DFANode("q" + str(len(states) + 1, ), clk))
+        new_state.draw(win)
         states.append(new_state)
 
     elif tool == 2:  # add transition
@@ -132,8 +131,8 @@ def processClick(win, clk, tool):
                 transition_begin_state = q
             else:  # second state
                 # Draw the transition
-                line_first = movePoints(transition_begin_state.center, q.center)
-                line_second = movePoints(q.center, transition_begin_state.center)
+                line_first = movePoints(transition_begin_state.getCenter(), q.getCenter())
+                line_second = movePoints(q.getCenter(), transition_begin_state.getCenter())
                 ln = Line(line_first, line_second)
                 ln.setArrow("last")
                 ln.draw(win)
@@ -178,13 +177,7 @@ def processClick(win, clk, tool):
                 transitions.remove(move_begin_state.transitions[i])
 
             # Redraw and update state
-            move_begin_state.erase()
-            move_begin_state.circle = Circle(clk, CIR_RADIUS)
-            move_begin_state.center = clk
-            move_begin_state.label = Text(clk, move_begin_state.name)
-            move_begin_state.circle.setFill("yellow")
-            move_begin_state.circle.draw(win)
-            move_begin_state.label.draw(win)
+            move_begin_state.move(clk)
 
             for i in range(len(ins)):   # Update where move_begin_state is the outState
                 line_first = movePoints(move_begin_state.center, ins[i].center)

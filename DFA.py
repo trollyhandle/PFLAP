@@ -3,14 +3,16 @@ from collections import deque
 
 class DFANode:
 
-    def __init__(self, name, is_final=False):
+    def __init__(self, name, center=None, initial=False, final=False):
         self.name = name
         self.transitions = {}
-        self.final = is_final
+        self.is_final = final
+        self.is_initial = initial
+        self.center = center  # location of representation in GUI
 
     def __str__(self):
         t = ', '.join(sorted(['({0} -> {1})'.format(k, v) for k, v in self.transitions.items()]))
-        return '"'+self.name+'" -> '+t+(' final'if self.final else'')
+        return '"'+self.name+'" -> '+t+(' final'if self.is_final else'')
 
     def add_transition(self, char, ident):
         # add transition on char to state#ident
@@ -19,6 +21,9 @@ class DFANode:
     def get_transition(self, char):
         # get the destination state, default -1 if no such transition
         return self.transitions.get(char, -1)
+
+    def getCenter(self):
+        return self.center
 
 
 class DFA:
@@ -59,6 +64,15 @@ class DFA:
 
     @staticmethod
     def generate(alphabet, transition_fn, initial, accept_fn):
+        '''
+        Generates a DFA algorithmically
+        :param alphabet: list of strings in the alphabet
+        :param transition_fn: a function that accepts a state name and transition label.
+                                returns the new state
+        :param initial: the initial state (string)
+        :param accept_fn: boolean function. takes a state and outputs
+        :return:
+        '''
         # make queue for uninitialized states; add initial
         new_states = deque()
         new_states.append(initial)
@@ -76,7 +90,7 @@ class DFA:
                     # trace a new state, add to DFA
                     new_states.append(to_state)
                     ready_states[to_state] = len(dfa.nodes)
-                    dfa.nodes[len(dfa.nodes)] = DFANode(to_state, is_final=accept_fn(to_state))
+                    dfa.nodes[len(dfa.nodes)] = DFANode(to_state, final=accept_fn(to_state))
                 # create the transition
                 dfa.nodes[ready_states[state]].add_transition(alpha, ready_states[to_state])
         return dfa

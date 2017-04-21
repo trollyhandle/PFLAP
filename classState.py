@@ -2,52 +2,75 @@
 # Tyler Holland, Gaybi Igno
 # Maintains data on a single state in a N/DFA, and its associated transitions
 
-
 from graphics import *
+# import DFA
+
+CIR_RADIUS = 20
 
 
 class State:
-    # Class variables:
-    #   circle : the circle object graphically representing this state
-    #   start : (bool) this state is a starting state (initial tracked by FA)
-    #   final : (bool) this state is an accepting state (initial tracked by FA)
-    #   center : Point(x, y) of which the state is centered
-    #   name : the name for this state. defaults to q0, q1, ... qn
-    #   label : textbox displaying name of state on circle
-    #   transitions[] : list of transitions going in or out of this state
+    # vars:
+    # node - DFANode this State is based on
+    # circle - Circle object in the canvas
+    # transitions [] - Transitions with this state as source or destination
+    # label - Text object in the canvas
 
-    def __init__(self, center, transitions, circle, name):
-        self.final = False
-        self.start = False
-        self.center = center
-        self.transitions = transitions
-        self.circle = circle
-        self.name = name
-        self.label = Text(center, name)
+    def __init__(self, node):
+        self.node = node
+        self.circle = Circle(node.center, CIR_RADIUS)
+        self.label = Text(node.center, node.name)
+        self.transitions = []  # todo ?
+
+    def draw(self, win):
+        self.circle.setFill('yellow')
+        self.circle.draw(win)
+        self.label.draw(win)
 
     def print(self):
-        print("center: ", self.center)
+        print("center: ", self.node.center)
         print("circle: ", self.circle)
         print("number of trans: ", len(self.transitions))
 
     def add_transition(self, line):
         self.transitions.append(line)
 
+    def getCenter(self):
+        return self.node.getCenter()
+
+    # if line was clicked
     def tcontains(self, index, click):
         first, second = self.transitions[index].line.getP1(), self.transitions[index].line.getP2()
         return (first.distanceTo(click) + second.distanceTo(click) == first.distanceTo(second))
 
-    def erase(self):
+    # move transition
+    def move(self, location):
+        dx = location.x - self.getCenter().x
+        dy = location.y - self.getCenter().y
+        self.circle.move(dx, dy)
+        self.label.move(dx, dy)
+
+        self.node.center = location
+
+        # update transitions
+        for line in self.transitions:
+
+            line.update()
+
+
+
+    # delete transition
+    def delete(self):
         self.circle.undraw()
         self.label.undraw()
         for i in range(len(self.transitions)):
             self.transitions[i].undraw()
         self.transitions = []
 
+    # redraw transitions - after a move
     def drawAll(self, win):
         for i in range(len(self.transitions)):
             self.transitions[i].line.draw(win)
-            #self.transitions[i].text.draw(win)
+
 
 class Transition:
     # Initialize
@@ -62,11 +85,11 @@ class Transition:
 
     # Get first state's center
     def firstCenter(self):
-        return self.outState.center
+        return self.outState.getCenter()
 
     # Get second state's center
     def secondCenter(self):
-        return self.inState.center
+        return self.inState.getCenter()
 
     # Draw
     def draw(self, win):
@@ -76,6 +99,9 @@ class Transition:
     def undraw(self):
         self.line.undraw()
         self.text.undraw()
+
+    def update(self):
+        pass  # todo
 
     def drawSymbols(self, win):
         s = ", ".join(self.symbols)
