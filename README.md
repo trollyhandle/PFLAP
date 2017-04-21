@@ -3,7 +3,7 @@ Python tool for creating NFA/DFA and performing certain operations
 
 By: Tyler Holland and Gaybi Igno
 
-Problem to solve:
+Assignment:
 Create a tool similar to JFLAP (http://www.jflap.org/) that allows a user to create a DFA or an NFA and perform the
 following operations:
 
@@ -24,7 +24,8 @@ This tool will have an interface similar to JFLAP in several ways:
         Users can set and edit labels on states/transitions
         Users can execute the supported operations via the aforementioned toolbox
 
-        /***** optional extras *****/
-        Graphs can be saved to file, and loaded from files (maybe '*.pff' ?)
-        DFA's can be generated from a transition matrix input (csv-style?)
+        DFA's can be generated programmatically given:
+                initial state
+                state transition function
+                boolean accept function
         
