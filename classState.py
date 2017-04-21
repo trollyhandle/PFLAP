@@ -14,8 +14,7 @@ class State:
     #   center : Point(x, y) of which the state is centered
     #   name : the name for this state. defaults to q0, q1, ... qn
     #   label : textbox displaying name of state on circle
-    #   transitions_in[] : list of transitions going in or out of this state
-    #   transitions_out[] : list of transitions going to this state
+    #   transitions[] : list of transitions going in or out of this state
 
     def __init__(self, center, transitions, circle, name):
         self.final = False
@@ -59,7 +58,7 @@ class Transition:
         self.symbols = []
         for i in symbols:
             self.symbols.append(i)
-        self.text = ""
+        self.text = None
 
     # Get first state's center
     def firstCenter(self):

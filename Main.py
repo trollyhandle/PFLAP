@@ -51,8 +51,9 @@ def init_window(win):
         rect.draw(win)
         tool_boxes.append(rect)
 
-        b_test = tk.Button(win, text=tool_titles[i], command=gen_callback(i))
-        win.create_window(rect.getCenter().x, rect.getCenter().y, window=b_test)
+        button_width = 15
+        button = tk.Button(win, text=tool_titles[i], command=gen_callback(i), width=button_width)
+        win.create_window(rect.getCenter().x, rect.getCenter().y, window=button)
 
     tool_boxes[0].setOutline('blue')
     tool_boxes[0].setWidth(2)
