@@ -52,6 +52,7 @@ def init_window(win):
         tool_boxes.append(rect)
 
         b_test = tk.Button(win, text=tool_titles[i], width= 15, command=gen_callback(i))
+
         win.create_window(rect.getCenter().x, rect.getCenter().y, window=b_test)
 
     tool_boxes[0].setOutline('blue')
@@ -130,20 +131,14 @@ def processClick(win, clk, tool):
                 q.circle.setFill('blue')
                 transition_begin_state = q
             else:  # second state
-                # Draw the transition
-                line_first = movePoints(transition_begin_state.getCenter(), q.getCenter())
-                line_second = movePoints(q.getCenter(), transition_begin_state.getCenter())
-                ln = Line(line_first, line_second)
-                ln.setArrow("last")
-                ln.draw(win)
 
                 #TODO: Temp way to store/print input symbols -- Put lambda if none
                 inSymbols = input("Input transition symbol(s): ")
                 symbols = inSymbols.split()
 
-                    # Make Transition object
-                trans = Transition(transition_begin_state, q, symbols, ln)
-                trans.drawSymbols(win)
+                # Make and draw Transition object
+                trans = Transition(transition_begin_state, q, symbols)
+                trans.draw(win)
                 transitions.append(trans)
 
                 # Add transition to each state -- used to app ln
@@ -159,50 +154,10 @@ def processClick(win, clk, tool):
     elif tool == 3:  # move state
         global move_begin_state  # prevent local namespace shadowing
         if move_begin_state is not None:  # relocate
-            ins = []
-            outs = []
-            ti = []
-            to = []
-            for i in range(len(move_begin_state.transitions)):
-                for q in reversed(states):  # Temp remove transition from all states
-                    if move_begin_state != q:
-                        if move_begin_state.transitions[i] in q.transitions:
-                            if (move_begin_state.transitions[i].inState == q):
-                                ti.append(move_begin_state.transitions[i].symbols)
-                                ins.append(q)
-                            else:
-                                to.append(move_begin_state.transitions[i].symbols)
-                                outs.append(q)
-                            q.transitions.remove(move_begin_state.transitions[i])
-                transitions.remove(move_begin_state.transitions[i])
 
-            # Redraw and update state
-            move_begin_state.move(clk)
-
-            for i in range(len(ins)):   # Update where move_begin_state is the outState
-                line_first = movePoints(move_begin_state.center, ins[i].center)
-                line_second = movePoints(ins[i].center, move_begin_state.center)
-                ln = Line(line_first, line_second)
-                ln.setArrow("last")
-                trans = Transition(move_begin_state, ins[i], ti[i], ln)    # Find way to keep symbols
-                trans.drawSymbols(win)
-                move_begin_state.add_transition(trans)
-                ins[i].add_transition(trans)
-                transitions.append(trans)
-
-            for i in range(len(outs)):  # Update where move_begin_state is the inState
-                line_first = movePoints(outs[i].center, move_begin_state.center)
-                line_second = movePoints(move_begin_state.center, outs[i].center)
-                ln = Line(line_first, line_second)
-                ln.setArrow("last")
-                trans = Transition(outs[i], move_begin_state, to[i], ln)   # Find way to keep symbols
-                trans.drawSymbols(win)
-                move_begin_state.add_transition(trans)
-                outs[i].add_transition(trans)
-                transitions.append(trans)
-
-            # Redraw all transitions in and out of state
-            move_begin_state.drawAll(win)
+            # Redraw and update state and transitions
+            move_begin_state.move(clk, win)
+            move_begin_state.circle.setFill("yellow")
             move_begin_state = None
             return
         q = find_containing_state(clk)
@@ -211,15 +166,16 @@ def processClick(win, clk, tool):
             move_begin_state = q
 
     elif tool == 4:  # remove state or transition
+        win.config(cursor="X_cursor")
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
             for i in range(len(q.transitions)):
                 if q.tcontains(i, clk):
                     q.transitions[i].undraw()
+                    del transitions[q.transitions[i]]
                     del q.transitions[i]
             if q.circle.contains(clk):
-                q.label.undraw()
                 states.remove(q)
-                q.erase()
+                q.delete()
                 break
 
     else:  # undo, redo? other stuff
@@ -227,16 +183,7 @@ def processClick(win, clk, tool):
     win.flush()  # force update after any visual changes
 
 
-def movePoints(first, second):
-    """
-    Takes two points and returns a point that is distance t from first point
-    """
-    d = math.sqrt(((second.getX() - first.getX()) ** 2) +
-                  ((second.getY() - first.getY()) ** 2))
-    t = (CIR_RADIUS - .1)/d
-    point = Point((((1 - t) * (first.getX())) + (t * second.getX())),
-                  (((1 - t) * (first.getY())) + (t * second.getY())))
-    return point
+
 
 
 main()

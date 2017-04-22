@@ -52,7 +52,7 @@ class DFA:
             if state == -1:
                 print('error')
                 return
-        if self.nodes[state].final:
+        if self.nodes[state].is_final:
             print('yes')
         else:
             print('no')

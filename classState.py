@@ -26,6 +26,13 @@ class State:
         self.circle.draw(win)
         self.label.draw(win)
 
+    # Draw state and transition(s)
+    def drawAll(self, win):
+        self.draw(win)
+        # Update transitions
+        for line in self.transitions:
+            line.draw(win)
+
     def print(self):
         print("center: ", self.node.center)
         print("circle: ", self.circle)
@@ -37,13 +44,14 @@ class State:
     def getCenter(self):
         return self.node.getCenter()
 
-    # if line was clicked
+    # If transition line was clicked
     def tcontains(self, index, click):
         first, second = self.transitions[index].line.getP1(), self.transitions[index].line.getP2()
-        return (first.distanceTo(click) + second.distanceTo(click) == first.distanceTo(second))
+        return first.distanceTo(click) + second.distanceTo(click) == first.distanceTo(second)
 
-    # move transition
-    def move(self, location):
+
+    # Move transition
+    def move(self, location, win):
         dx = location.x - self.getCenter().x
         dy = location.y - self.getCenter().y
         self.circle.move(dx, dy)
@@ -51,14 +59,11 @@ class State:
 
         self.node.center = location
 
-        # update transitions
+        # Update transitions
         for line in self.transitions:
+            line.draw(win)
 
-            line.update()
-
-
-
-    # delete transition
+    # Delete state and all of its transitions
     def delete(self):
         self.circle.undraw()
         self.label.undraw()
@@ -66,21 +71,20 @@ class State:
             self.transitions[i].undraw()
         self.transitions = []
 
-    # redraw transitions - after a move
-    def drawAll(self, win):
-        for i in range(len(self.transitions)):
-            self.transitions[i].line.draw(win)
-
 
 class Transition:
-    # Initialize
-    def __init__(self, outState, inState, symbols, line):
-        self.line = line
+    # vars:
+    # outState - State at tail of transition
+    # inState - State at head of transition
+    # symbols - Transition symbols
+
+    def __init__(self, outState, inState, symbols):
         self.inState = inState
         self.outState = outState
         self.symbols = []
         for i in symbols:
             self.symbols.append(i)
+        self.line = None
         self.text = None
 
     # Get first state's center
@@ -93,19 +97,32 @@ class Transition:
 
     # Draw
     def draw(self, win):
+        if self.line is not None:
+            self.line.undraw()
+            self.text.undraw()
+        line_first = self.movePoints(self.firstCenter(), self.secondCenter())
+        line_second = self.movePoints(self.secondCenter(), self.firstCenter())
+        self.line = Line(line_first, line_second)
+        self.line.setArrow("last")
         self.line.draw(win)
+
+        s = ", ".join(self.symbols)
+        point = Point(self.line.getCenter().getX(), self.line.getCenter().getY() - 10)
+        self.text = Text(point, s)
+        self.text.draw(win)
 
     # Erase
     def undraw(self):
         self.line.undraw()
         self.text.undraw()
 
-    def update(self):
-        pass  # todo
-
-    def drawSymbols(self, win):
-        s = ", ".join(self.symbols)
-        point = Point(self.line.getCenter().getX(), self.line.getCenter().getY() - 10)
-        textSymbol = Text(point, s)
-        textSymbol.draw(win)
-        self.text = textSymbol
+    def movePoints(self, first, second):
+        """
+        Takes two points and returns a point that is distance t from first point
+        """
+        d = math.sqrt(((second.getX() - first.getX()) ** 2) +
+                      ((second.getY() - first.getY()) ** 2))
+        t = (CIR_RADIUS - .1) / d
+        point = Point((((1 - t) * (first.getX())) + (t * second.getX())),
+                      (((1 - t) * (first.getY())) + (t * second.getY())))
+        return point
