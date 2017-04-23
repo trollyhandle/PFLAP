@@ -3,8 +3,6 @@
 # Maintains data on a single state in a N/DFA, and its associated transitions
 
 from graphics import *
-# import DFA
-
 CIR_RADIUS = 20
 
 
@@ -19,6 +17,7 @@ class State:
         self.node = node
         self.circle = Circle(node.center, CIR_RADIUS)
         self.label = Text(node.center, node.name)
+        #: :type: list of Transition
         self.transitions = []  # todo ?
 
     def draw(self, win):
@@ -41,6 +40,10 @@ class State:
     def add_transition(self, line):
         self.transitions.append(line)
 
+    def remove_transition(self, line):
+        if line in self.transitions:
+            self.transitions.remove(line)
+
     def getCenter(self):
         return self.node.getCenter()
 
@@ -48,7 +51,6 @@ class State:
     def tcontains(self, index, click):
         first, second = self.transitions[index].line.getP1(), self.transitions[index].line.getP2()
         return first.distanceTo(click) + second.distanceTo(click) == first.distanceTo(second)
-
 
     # Move transition
     def move(self, location, win):
@@ -67,8 +69,8 @@ class State:
     def delete(self):
         self.circle.undraw()
         self.label.undraw()
-        for i in range(len(self.transitions)):
-            self.transitions[i].undraw()
+        for i in range(len(self.transitions)-1, -1, -1):
+            self.transitions[i].remove()
         self.transitions = []
 
 
@@ -79,7 +81,9 @@ class Transition:
     # symbols - Transition symbols
 
     def __init__(self, outState, inState, symbols):
+        #: :type: State
         self.inState = inState
+        #: :type: State
         self.outState = outState
         self.symbols = []
         for i in symbols:
@@ -115,6 +119,11 @@ class Transition:
     def undraw(self):
         self.line.undraw()
         self.text.undraw()
+
+    def remove(self):
+        self.undraw()
+        self.outState.remove_transition(self)
+        self.inState.remove_transition(self)
 
     def movePoints(self, first, second):
         """

@@ -21,20 +21,22 @@ CIR_RADIUS = 20
 toolbar_height = WIN_HEIGHT // 12
 
 active_tool = 0
-tool_boxes = []
-tool_titles = ['Cursor', 'Add State', 'Add Transition', 'Move', 'Remove']
+#: :type: list of Rectangle
+tool_boxes = []  # type hinting is neat!
 
 states = []
-selected_state = None
-
 # Store transitions at some point possibly in a dictionary
-transitions = []
 
+selected_state = None
 transition_begin_state = None
 move_begin_state = None
 
 
 def init_window(win):
+    """ 
+    :param win: graphics window to initialize 
+    @type win tk.Canvas """
+    tool_titles = ['Cursor', 'Add State', 'Add Transition', 'Move', 'Remove']
     toolbar_box_width = WIN_WIDTH // len(tool_titles)
 
     padding = 10
@@ -51,9 +53,10 @@ def init_window(win):
         rect.draw(win)
         tool_boxes.append(rect)
 
-        b_test = tk.Button(win, text=tool_titles[i], width= 15, command=gen_callback(i))
+        button_width = 15
+        button = tk.Button(win, text=tool_titles[i], width=button_width, command=gen_callback(i))
 
-        win.create_window(rect.getCenter().x, rect.getCenter().y, window=b_test)
+        win.create_window(rect.getCenter().x, rect.getCenter().y, window=button)
 
     tool_boxes[0].setOutline('blue')
     tool_boxes[0].setWidth(2)
@@ -66,14 +69,13 @@ def configRightClicks(win):
     win.rightMenu.add_checkbutton(label='check_test', variable=initial, command=lambda: print('check', initial.get()))
 
 
-def switchActiveButton(next):
+def switchActiveButton(next_tool):
     global active_tool
     tool_boxes[active_tool].setOutline('black')
     tool_boxes[active_tool].setWidth(1)
-    tool_boxes[next].setOutline('blue')
-    tool_boxes[next].setWidth(2)
-    active_tool = next
-    return next
+    tool_boxes[next_tool].setOutline('blue')
+    tool_boxes[next_tool].setWidth(2)
+    active_tool = next_tool
 
 
 def main():
@@ -132,14 +134,12 @@ def processClick(win, clk, tool):
                 transition_begin_state = q
             else:  # second state
 
-                #TODO: Temp way to store/print input symbols -- Put lambda if none
-                inSymbols = input("Input transition symbol(s): ")
-                symbols = inSymbols.split()
+                # TODO: Temp way to store/print input symbols -- Put lambda if none
+                symbols = input("Input transition symbol(s): ").split()
 
                 # Make and draw Transition object
                 trans = Transition(transition_begin_state, q, symbols)
                 trans.draw(win)
-                transitions.append(trans)
 
                 # Add transition to each state -- used to app ln
                 transition_begin_state.add_transition(trans)
@@ -153,8 +153,7 @@ def processClick(win, clk, tool):
 
     elif tool == 3:  # move state
         global move_begin_state  # prevent local namespace shadowing
-        if move_begin_state is not None:  # relocate
-
+        if move_begin_state is not None:  # state ready to relocate
             # Redraw and update state and transitions
             move_begin_state.move(clk, win)
             move_begin_state.circle.setFill("yellow")
@@ -170,9 +169,7 @@ def processClick(win, clk, tool):
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
             for i in range(len(q.transitions)):
                 if q.tcontains(i, clk):
-                    q.transitions[i].undraw()
-                    del transitions[q.transitions[i]]
-                    del q.transitions[i]
+                    q.transitions[i].remove()
             if q.circle.contains(clk):
                 states.remove(q)
                 q.delete()
@@ -180,10 +177,8 @@ def processClick(win, clk, tool):
 
     else:  # undo, redo? other stuff
         print('tool not ready')
+
     win.flush()  # force update after any visual changes
-
-
-
 
 
 main()

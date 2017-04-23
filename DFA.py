@@ -1,4 +1,4 @@
-from collections import deque
+from collections import deque  # used for generating a DFA
 
 
 class DFANode:
@@ -43,10 +43,15 @@ class DFA:
     def get_node_by_id(self, ident):
         return self.nodes[ident]
 
-    def simulate(self, input):
+    def print(self):
+        print('initial state id:', self.initial, ' (name: "'+self.nodes[self.initial].name+'")')
+        for key in self.nodes.keys():
+            print(key, ':', self.nodes[key])
+
+    def simulate(self, input_string):
         state = self.initial
         print("state {0:2} ({1})".format(state, self.nodes[state].name))
-        for char in input:
+        for char in input_string:
             state = self.nodes[state].get_transition(char)
             print("state {0:2} ({1})".format(state, self.nodes[state].name))
             if state == -1:
@@ -57,22 +62,17 @@ class DFA:
         else:
             print('no')
 
-    def print(self):
-        print('initial state id:', self.initial, ' (name: "'+self.nodes[self.initial].name+'")')
-        for key in self.nodes.keys():
-            print(key, ':', self.nodes[key])
-
     @staticmethod
     def generate(alphabet, transition_fn, initial, accept_fn):
-        '''
+        """
         Generates a DFA algorithmically
         :param alphabet: list of strings in the alphabet
-        :param transition_fn: a function that accepts a state name and transition label.
-                                returns the new state
+        :param transition_fn: function. accepts state name and transition label.
+                                returns new state name
         :param initial: the initial state (string)
-        :param accept_fn: boolean function. takes a state and outputs
+        :param accept_fn: function. takes a state, outputs True if it is an accepting state
         :return:
-        '''
+        """
         # make queue for uninitialized states; add initial
         new_states = deque()
         new_states.append(initial)
@@ -99,7 +99,7 @@ class DFA:
 def main():
     print('dfa test\n')
 
-    #
+    # L = { w | len(w) = 3 and w is homogeneous }
     alphabet = ['a', 'b']
     strlen = 3
     transition_fn = lambda x, a: x+a if len(x) < strlen else x[1:]+a
@@ -109,17 +109,6 @@ def main():
     dfa.print()
 
     dfa.simulate('aaaabbaabbaaa')
-    # dfa[0] = State(0)
-    # dfa[0].add_transition_to(State(1), 'x')
-    # dfa[0].set_graphic(State.State(Point(0,0), [], None, 'test'))
-
-    # test = dfa.dumps()
-    # print(test)
-
-    # with open('trans_ll.txt') as f:
-    #     for line in f.readlines():
-    #         Node.construct(line.strip())
-    #         print()
 
 
 main()
