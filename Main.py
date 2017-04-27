@@ -23,9 +23,8 @@ toolbar_height = WIN_HEIGHT // 12
 active_tool = 0
 #: :type: list of Rectangle
 tool_boxes = []  # type hinting is neat!
-
+#: :type: list of State
 states = []
-# Store transitions at some point possibly in a dictionary
 
 selected_state = None
 transition_begin_state = None
@@ -86,6 +85,8 @@ def main():
 
     configRightClicks(win)
 
+    dfa = DFA()
+
     while True:
         try:
             clk_pt = win.getMouse()
@@ -94,7 +95,7 @@ def main():
             break  # aka return aka END OF THE LINE
 
         if clk_pt.getY() > toolbar_height:
-            processClick(win, clk_pt, active_tool)
+            processClick(win, clk_pt, active_tool, dfa)
 
 
 def find_containing_state(clk):
@@ -105,7 +106,7 @@ def find_containing_state(clk):
     return None
 
 
-def processClick(win, clk, tool):
+def processClick(win, clk, tool, dfa):
     if tool == 0:  # cursor (edit state/transition)
         global selected_state  # prevent local namespace shadowing
         q = find_containing_state(clk)
@@ -119,7 +120,6 @@ def processClick(win, clk, tool):
             selected_state = None
 
     elif tool == 1:  # add state
-
         new_state = State(DFANode("q" + str(len(states) + 1, ), clk))
         new_state.draw(win)
         states.append(new_state)
@@ -138,6 +138,7 @@ def processClick(win, clk, tool):
                 symbols = input("Input transition symbol(s): ").split()
 
                 # Make and draw Transition object
+                # transition_begin_state.add_transitions(q, symbols)
                 trans = Transition(transition_begin_state, q, symbols)
                 trans.draw(win)
 
@@ -165,7 +166,7 @@ def processClick(win, clk, tool):
             move_begin_state = q
 
     elif tool == 4:  # remove state or transition
-        win.config(cursor="X_cursor")
+        win.config(cursor="X_cursor")  # todo
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
             for i in range(len(q.transitions)):
                 if q.tcontains(i, clk):

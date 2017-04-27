@@ -189,7 +189,7 @@ class GraphWin(tk.Canvas):
         self.mouseX = None
         self.mouseY = None
         self.bind("<Button-1>", self._onClick)
-        if True:  # todo True -> laptop; False -> desktop
+        if False:  # todo True -> laptop; False -> desktop
             self.bind("<Button-2>", self._onRightClick)
             self.bind("<Button-3>", lambda x: print('unsupported button'))
         else:
