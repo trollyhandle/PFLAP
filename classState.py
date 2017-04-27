@@ -18,7 +18,7 @@ class State:
         self.circle = Circle(node.center, CIR_RADIUS)
         self.label = Text(node.center, node.name)
         #: :type: list of Transition
-        self.transitions = []  # todo ?
+        self.transitions = []  # todo list or dict?
 
     def draw(self, win):
         self.circle.setFill('yellow')

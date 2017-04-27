@@ -1,11 +1,12 @@
 from collections import deque  # used for generating a DFA
 
+from classState import *
 
 class DFANode:
 
     def __init__(self, name, center=None, initial=False, final=False):
         self.name = name
-        self.transitions = {}
+        self.transitions = {}  # (character, newstate) k/v pairs
         self.is_final = final
         self.is_initial = initial
         self.center = center  # location of representation in GUI
@@ -18,9 +19,13 @@ class DFANode:
         # add transition on char to state#ident
         self.transitions[char] = ident
 
-    def get_transition(self, char):
+    def get_transition_on(self, char):
         # get the destination state, default -1 if no such transition
         return self.transitions.get(char, -1)
+
+    def get_transition_to(self, dest_state):
+        # get
+        pass
 
     def getCenter(self):
         return self.center
@@ -48,19 +53,42 @@ class DFA:
         for key in self.nodes.keys():
             print(key, ':', self.nodes[key])
 
-    def simulate(self, input_string):
+    def simulate(self, input_string, debug=False):
         state = self.initial
-        print("state {0:2} ({1})".format(state, self.nodes[state].name))
+        if(debug):print("state {0:2} ({1})".format(state, self.nodes[state].name))
         for char in input_string:
             state = self.nodes[state].get_transition(char)
-            print("state {0:2} ({1})".format(state, self.nodes[state].name))
+            if (debug):print("state {0:2} ({1})".format(state, self.nodes[state].name))
             if state == -1:
                 print('error')
                 return
         if self.nodes[state].is_final:
-            print('yes')
+            print('accepted')
         else:
-            print('no')
+            print('invalid string')
+
+    def inflate(self, autolayout=False):
+        """
+        Creates the graphics representations of this DFA.
+        Constructs State objects, and connects with Transition objects based
+        on the underlying Node structure.
+        Objects are not drawn.
+        :return: list of State objects inflated
+        """
+        states = []
+        state_ids = []
+        # construct all State objects
+        for k in self.nodes:
+            states.append(State(self.nodes[k]))
+            state_ids.append(k)
+        for s in states:
+            # for each state's OUTGOING transitions:
+            for c, t in s.node.transitions.items():
+                r = Transition(s, states[state_ids[t]], c)
+
+
+
+        return states
 
     @staticmethod
     def generate(alphabet, transition_fn, initial, accept_fn):
@@ -95,20 +123,21 @@ class DFA:
                 dfa.nodes[ready_states[state]].add_transition(alpha, ready_states[to_state])
         return dfa
 
+    @staticmethod
+    def example():
+        print('dfa test\n')
 
-def main():
-    print('dfa test\n')
+        print("Alphabet: { a, b }")
+        alphabet = ['a', 'b']
 
-    # L = { w | len(w) = 3 and w is homogeneous }
-    alphabet = ['a', 'b']
-    strlen = 3
-    transition_fn = lambda x, a: x+a if len(x) < strlen else x[1:]+a
-    accept_fn = lambda x: len(x) == strlen and (x.find('a') == -1 or x.find('b') == -1)
+        print("L = { w | len(w) == 3 and w is homogeneous over the alphabet }")
+        strlen = 3
+        transition_fn = lambda x, a: x+a if len(x) < strlen else x[1:]+a
+        accept_fn = lambda x: len(x) == strlen and (x.find('a') == -1 or x.find('b') == -1)
 
-    dfa = DFA.generate(alphabet, transition_fn, '', accept_fn)
-    dfa.print()
+        dfa = DFA.generate(alphabet, transition_fn, '', accept_fn)
+        dfa.print()
 
-    dfa.simulate('aaaabbaabbaaa')
+        dfa.simulate('aaaabbaabbaaa')
 
-
-main()
+        return dfa
