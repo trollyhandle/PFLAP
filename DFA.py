@@ -55,10 +55,10 @@ class DFA:
 
     def simulate(self, input_string, debug=False):
         state = self.initial
-        if(debug):print("state {0:2} ({1})".format(state, self.nodes[state].name))
+        if(debug): print("state {0:2} ({1})".format(state, self.nodes[state].name))
         for char in input_string:
-            state = self.nodes[state].get_transition(char)
-            if (debug):print("state {0:2} ({1})".format(state, self.nodes[state].name))
+            state = self.nodes[state].get_transition_on(char)
+            if (debug): print("state {0:2} ({1})".format(state, self.nodes[state].name))
             if state == -1:
                 print('error')
                 return
@@ -67,26 +67,32 @@ class DFA:
         else:
             print('invalid string')
 
-    def inflate(self, autolayout=False):
+    def inflate(self, win, autolayout=True):
         """
         Creates the graphics representations of this DFA.
         Constructs State objects, and connects with Transition objects based
         on the underlying Node structure.
-        Objects are not drawn.
+        Objects are drawn into win.
         :return: list of State objects inflated
         """
+        # todo if autolayout, figure out a way to arrange states
         states = []
         state_ids = []
         # construct all State objects
         for k in self.nodes:
-            states.append(State(self.nodes[k]))
+            if self.nodes[k].center is None:
+                self.nodes[k].center = Point(100, 100)
+            s = State(self.nodes[k])
+            s.draw(win)
+            states.append(s)
             state_ids.append(k)
         for s in states:
             # for each state's OUTGOING transitions:
-            for c, t in s.node.transitions.items():
-                r = Transition(s, states[state_ids[t]], c)
-
-
+            for c, t_id in s.node.transitions.items():
+                t = Transition(s, states[state_ids[t_id]], c)
+                t.draw(win)
+                s.add_transition(t)
+                states[state_ids[t_id]].add_transition(t)
 
         return states
 
