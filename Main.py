@@ -10,8 +10,6 @@
 #   Convert NFA to DFA
 #   On two N/DFA inputs: union, intersect, difference, test equivalence
 
-from classState import *
-from graphics import *
 from DFA import *
 
 WIN_HEIGHT = 600
@@ -79,13 +77,19 @@ def switchActiveButton(next_tool):
 
 def main():
     print('yay pflap')
+    from_scratch = False
 
     win = GraphWin('PFLAP', WIN_WIDTH, WIN_HEIGHT, autoflush=False)
     init_window(win)
 
     configRightClicks(win)
 
-    dfa = DFA()
+    if from_scratch:  # create brand-new dfa
+        dfa = DFA()
+    else:  # generate dfa
+        dfa = DFA.example()
+        global states
+        states = dfa.inflate(win)
 
     while True:
         try:

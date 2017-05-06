@@ -129,6 +129,9 @@ class Transition:
         """
         Takes two points and returns a point that is distance t from first point
         """
+        if first.x == second.x and first.y == second.y:
+            # todo self-transition??
+            return first
         d = math.sqrt(((second.getX() - first.getX()) ** 2) +
                       ((second.getY() - first.getY()) ** 2))
         t = (CIR_RADIUS - .1) / d

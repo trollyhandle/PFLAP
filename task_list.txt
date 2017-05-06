@@ -2,29 +2,34 @@ TASKS
 
 GENERAL 
 ✓ how to lambda character -- Just copy and paste λ !!
-change mouse to represent current mode
-    - the X mouse doesn't un-X after leaving remove mode!
+✓ change mouse to represent current mode
+✓    - the X mouse doesn't un-X after leaving remove mode!
 
 GRAPHICS
 ✓ Limit transitions to connecting edges of states instead of center
-✓ Detect right-clicks and/or mouse drags
+✓ Detect right-clicks
+  Detect mouse drags
 
 TRANSITIONS
-labels (entryboxes)
-wider hitboxes
+  labels (entryboxes)
+  wider hitboxes or label hitboxes
 
-if additional transition graphically created, edit existing one
-make transitions from state a->b->a distinguishable
+  if additional transition graphically created, edit existing one
+  make transitions from state a->b->a distinguishable
+  make self-transitions a thing
 
 STATE
-later: edit capability (after right-click)
-state default names fix
+  later: edit capability (after right-click)
+  state default names fix
+  distinguish initial, final states
 
 DFA
 ✓ keep track of initial state
 ✓ keep track of final states
 ✓ transition matrix
+✓ generate from definition
+✓ inflate to graphics
 
 LATER
-file save/load
+  file save/load
 
