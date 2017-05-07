@@ -23,6 +23,8 @@ active_tool = 0
 tool_boxes = []  # type hinting is neat!
 #: :type: list of State
 states = []
+#: :type: list of Transitions
+transitions = []
 
 selected_state = None
 transition_begin_state = None
@@ -42,7 +44,7 @@ def init_window(win):
     border.draw(win)
 
     def gen_callback(idx):  # create closure!
-        return lambda: switchActiveButton(idx)
+        return lambda: switchActiveButton(idx, win)
 
     for i in range(len(tool_titles)):
         rect = Rectangle(Point(i*toolbar_box_width+padding, padding),
@@ -66,13 +68,18 @@ def configRightClicks(win):
     win.rightMenu.add_checkbutton(label='check_test', variable=initial, command=lambda: print('check', initial.get()))
 
 
-def switchActiveButton(next_tool):
+def switchActiveButton(next_tool, win):
     global active_tool
     tool_boxes[active_tool].setOutline('black')
     tool_boxes[active_tool].setWidth(1)
     tool_boxes[next_tool].setOutline('blue')
     tool_boxes[next_tool].setWidth(2)
     active_tool = next_tool
+    if active_tool == 4:
+        win.config(cursor="X_cursor")
+    else:
+        win.config(cursor="left_ptr")
+
 
 
 def main():
@@ -116,11 +123,11 @@ def processClick(win, clk, tool, dfa):
         q = find_containing_state(clk)
         if q is not None:
             if selected_state is not None and selected_state is not q:  # so it doesn't switch b, y, b
-                selected_state.circle.setFill('yellow')
+                selected_state.circle.setFill(selected_state.color)
             selected_state = q
             q.circle.setFill('light blue')
         elif selected_state is not None:  # clicked in voidspace
-            selected_state.circle.setFill('yellow')
+            selected_state.circle.setFill(selected_state.color)
             selected_state = None
 
     elif tool == 1:  # add state
@@ -142,18 +149,20 @@ def processClick(win, clk, tool, dfa):
                 symbols = input("Input transition symbol(s): ").split()
 
                 # Make and draw Transition object
-                # transition_begin_state.add_transitions(q, symbols)
-                trans = Transition(transition_begin_state, q, symbols)
-                trans.draw(win)
+                if not transition_begin_state.check_existing(q, symbols, win):
+                    trans = Transition(transition_begin_state, q, symbols)
+                    trans.draw(win)
+                    transitions.append(trans)
 
-                # Add transition to each state -- used to app ln
-                transition_begin_state.add_transition(trans)
-                q.add_transition(trans)
-                transition_begin_state.circle.setFill('yellow')
+                    # Add transition to each state -- used to app ln
+                    transition_begin_state.add_transition(trans)
+                    if not q.duplicate(q):
+                        q.add_transition(trans)
+                transition_begin_state.circle.setFill(transition_begin_state.color)
                 transition_begin_state = None
 
         elif transition_begin_state is not None:  # clicked in voidspace
-            transition_begin_state.circle.setFill('yellow')
+            transition_begin_state.circle.setFill(transition_begin_state.color)
             transition_begin_state = None
 
     elif tool == 3:  # move state
@@ -161,7 +170,7 @@ def processClick(win, clk, tool, dfa):
         if move_begin_state is not None:  # state ready to relocate
             # Redraw and update state and transitions
             move_begin_state.move(clk, win)
-            move_begin_state.circle.setFill("yellow")
+            #move_begin_state.circle.setFill("yellow")
             move_begin_state = None
             return
         q = find_containing_state(clk)
@@ -170,7 +179,7 @@ def processClick(win, clk, tool, dfa):
             move_begin_state = q
 
     elif tool == 4:  # remove state or transition
-        win.config(cursor="X_cursor")  # todo
+        win.config(cursor="X_cursor")  # todo fix when cursor is present
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
             for i in range(len(q.transitions)):
                 if q.tcontains(i, clk):
@@ -184,6 +193,5 @@ def processClick(win, clk, tool, dfa):
         print('tool not ready')
 
     win.flush()  # force update after any visual changes
-
 
 main()

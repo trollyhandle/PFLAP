@@ -124,7 +124,10 @@ class DFA:
                     # trace a new state, add to DFA
                     new_states.append(to_state)
                     ready_states[to_state] = len(dfa.nodes)
-                    dfa.nodes[len(dfa.nodes)] = DFANode(to_state, final=accept_fn(to_state))
+                    new_node = DFANode(to_state, final=accept_fn(to_state))
+                    dfa.nodes[len(dfa.nodes)] = new_node
+                    if accept_fn(to_state):
+                        dfa.final.add(new_node)
                 # create the transition
                 dfa.nodes[ready_states[state]].add_transition(alpha, ready_states[to_state])
         return dfa
