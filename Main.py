@@ -91,12 +91,13 @@ def main():
 
     configRightClicks(win)
 
-    if from_scratch:  # create brand-new dfa
-        dfa = DFA()
-    else:  # generate dfa
-        dfa = DFA.example()
-        global states
-        states = dfa.inflate(win)
+
+    # if from_scratch:  # create brand-new dfa
+    #     dfa = DFA()
+    # else:  # generate dfa
+    #     dfa = DFA.example()
+    #     global states
+    #     states = dfa.inflate(win)
 
     while True:
         try:
@@ -106,7 +107,7 @@ def main():
             break  # aka return aka END OF THE LINE
 
         if clk_pt.getY() > toolbar_height:
-            processClick(win, clk_pt, active_tool, dfa)
+            processClick(win, clk_pt, active_tool)#, dfa)
 
 
 def find_containing_state(clk):
@@ -117,7 +118,7 @@ def find_containing_state(clk):
     return None
 
 
-def processClick(win, clk, tool, dfa):
+def processClick(win, clk, tool):#, dfa):
     if tool == 0:  # cursor (edit state/transition)
         global selected_state  # prevent local namespace shadowing
         q = find_containing_state(clk)
@@ -187,6 +188,7 @@ def processClick(win, clk, tool, dfa):
             for i in range(len(q.transitions)):
                 if q.tcontains(i, clk):
                     q.transitions[i].remove()
+                    break
             if q.circle.contains(clk):
                 states.remove(q)
                 q.delete()

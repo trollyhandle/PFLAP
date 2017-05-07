@@ -23,6 +23,16 @@ class State:
         #: :type: list of Transition
         self.transitions = []  # todo list or dict?
 
+    def equal(self, other):
+        if self.node == other.node and self.circle == other.circle \
+            and self.label == other.label and self.color == other.color:
+            if len(self.transitions) == len(other.transitions):
+                for trans in self.transitions:
+                    if trans not in other.transitions:
+                        return False
+                return True
+        return False
+
     # Draws state with given color
     def draw(self, win):
         if self.node.is_final:
@@ -62,8 +72,7 @@ class State:
 
     # If transition line was clicked
     def tcontains(self, index, click):
-        print("idx:", index)
-        if self.transitions[index].inState == self.transitions[index].outState:
+        if self.transitions[index].inState.equal(self.transitions[index].outState):
             return self.point_in_triangle(click, self.transitions[index].line.getPoints())
         first, second = self.transitions[index].line.getP1(), self.transitions[index].line.getP2()
         return first.distanceTo(click) + second.distanceTo(click) == first.distanceTo(second)
@@ -92,7 +101,7 @@ class State:
     def check_existing(self, inState, symbols, win):
         trans = None
         for t in self.transitions:
-            if t.inState == inState:
+            if t.inState == inState and t.outState == self:
                 trans = t
         if trans == None:
             return False
@@ -103,7 +112,7 @@ class State:
     def check_reverse(self, inState, symbols, win):
         trans_out = None
         for t in inState.transitions:
-            if t.inState == self:
+            if t.inState == self and t.outState == inState:
                 trans_out = t
         if trans_out == None:
             return False
@@ -259,18 +268,18 @@ class Transition:
             self.text.undraw()
         if self.inState == self.outState: # Check if self-transition
             self.self_transition(win)
+        else:
+            if not self.outState.check_reverse(self.inState, self.symbols, win):
+                line_first = self.movePoints(self.firstCenter(), self.secondCenter())
+                line_second = self.movePoints(self.secondCenter(), self.firstCenter())
+                self.line = Line(line_first, line_second)
+                self.line.setArrow("last")
+                self.line.draw(win)
 
-        if not self.outState.check_reverse(self.inState, self.symbols, win):
-            line_first = self.movePoints(self.firstCenter(), self.secondCenter())
-            line_second = self.movePoints(self.secondCenter(), self.firstCenter())
-            self.line = Line(line_first, line_second)
-            self.line.setArrow("last")
-            self.line.draw(win)
-
-            s = ", ".join(self.symbols)
-            point = Point(self.line.getCenter().getX(), self.line.getCenter().getY() - 10)
-            self.text = Text(point, s)
-            self.text.draw(win)
+                s = ", ".join(self.symbols)
+                point = Point(self.line.getCenter().getX(), self.line.getCenter().getY() - 10)
+                self.text = Text(point, s)
+                self.text.draw(win)
 
     # Erase
     def undraw(self):
