@@ -14,14 +14,14 @@ TRANSITIONS
   labels (entryboxes)
   wider hitboxes or label hitboxes
 
-  if additional transition graphically created, edit existing one
+✓ if additional transition graphically created, edit existing one, redraw
   make transitions from state a->b->a distinguishable
-  make self-transitions a thing
+✓ make self-transitions a thing
 
 STATE
   later: edit capability (after right-click)
   state default names fix
-  distinguish initial, final states
+✓ distinguish initial, final states graphically (colors!)
 
 DFA
 ✓ keep track of initial state
@@ -32,4 +32,3 @@ DFA
 
 LATER
   file save/load
-

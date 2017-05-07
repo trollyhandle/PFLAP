@@ -147,17 +147,20 @@ def processClick(win, clk, tool, dfa):
 
                 # TODO: Temp way to store/print input symbols -- Put lambda if none
                 symbols = input("Input transition symbol(s): ").split()
+                if len(symbols) == 0:
+                    symbols = "λ"
 
                 # Make and draw Transition object
-                if not transition_begin_state.check_existing(q, symbols, win):
-                    trans = Transition(transition_begin_state, q, symbols)
-                    trans.draw(win)
-                    transitions.append(trans)
+                if not transition_begin_state.check_existing(q, symbols, win):  # If not duplicate
+                    if not transition_begin_state.check_reverse(q, symbols, win):   # If no reverse transition
+                        trans = Transition(transition_begin_state, q, symbols)
+                        trans.draw(win)
+                        transitions.append(trans)
 
-                    # Add transition to each state -- used to app ln
-                    transition_begin_state.add_transition(trans)
-                    if not q.duplicate(q):
-                        q.add_transition(trans)
+                        # Add transition to each state -- used to app ln
+                        transition_begin_state.add_transition(trans)
+                        if not q.duplicate(q):
+                            q.add_transition(trans)
                 transition_begin_state.circle.setFill(transition_begin_state.color)
                 transition_begin_state = None
 

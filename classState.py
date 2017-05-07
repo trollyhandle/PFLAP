@@ -3,6 +3,7 @@
 # Maintains data on a single state in a N/DFA, and its associated transitions
 
 from graphics import *
+from math import *
 CIR_RADIUS = 20
 
 
@@ -98,6 +99,91 @@ class State:
         trans.add_symbol(symbols, win)
         return True
 
+    # If reverse transition exists, redraw transitions
+    def check_reverse(self, inState, symbols, win):
+        trans_out = None
+        for t in inState.transitions:
+            if t.inState == self:
+                trans_out = t
+        if trans_out == None:
+            return False
+
+        if self.find_degree(inState):
+            top_in = self.find_edge(Point(self.getCenter().getX() - 5, self.getCenter().getY()),
+                                    Point(inState.getCenter().getX() - 5, inState.getCenter().getY()))
+            top_out = inState.find_edge(Point(inState.getCenter().getX() - 5, inState.getCenter().getY()),
+                                        Point(self.getCenter().getX() - 5, self.getCenter().getY()))
+
+            bottom_out = self.find_edge(Point(self.getCenter().getX() + 5, self.getCenter().getY()),
+                                        Point(inState.getCenter().getX() + 5, inState.getCenter().getY()))
+            bottom_in = inState.find_edge(Point(inState.getCenter().getX() + 5, inState.getCenter().getY()),
+                                          Point(self.getCenter().getX() + 5, self.getCenter().getY()))
+        else:
+            top_in = self.find_edge(Point(self.getCenter().getX(), self.getCenter().getY() - 5),
+                                        Point(inState.getCenter().getX(), inState.getCenter().getY() - 5))
+            top_out = inState.find_edge(Point(inState.getCenter().getX(), inState.getCenter().getY() - 5),
+                                    Point(self.getCenter().getX(), self.getCenter().getY() - 5))
+
+            bottom_out = self.find_edge(Point(self.getCenter().getX(), self.getCenter().getY() + 5),
+                                          Point(inState.getCenter().getX(), inState.getCenter().getY() + 5))
+            bottom_in = inState.find_edge(Point(inState.getCenter().getX(), inState.getCenter().getY() + 5),
+                                    Point(self.getCenter().getX(), self.getCenter().getY() + 5))
+
+        # Redraw trans going out
+        trans_out.undraw()
+        trans_out.line = Line(top_in, top_out)
+        trans_out.line.setArrow("last")
+        trans_out.line.draw(win)
+        s = ", ".join(trans_out.symbols)
+        point = Point(trans_out.line.getCenter().getX(), trans_out.line.getCenter().getY() - 10)
+        trans_out.text = Text(point, s)
+        trans_out.text.draw(win)
+
+        # Draw transition going in
+        trans_in = None
+        new = False
+        for t in self.transitions:
+            if t.inState == inState:
+                trans_in = t
+                trans_in.undraw()
+
+        if trans_in == None:
+            trans_in = Transition(self, inState, symbols)
+            new = True
+
+        trans_in.line = Line(bottom_in, bottom_out)
+        trans_in.line.setArrow("last")
+        trans_in.line.draw(win)
+        s = ", ".join(trans_in.symbols)
+        point = Point(trans_in.line.getCenter().getX(), trans_in.line.getCenter().getY() + 10)
+        trans_in.text = Text(point, s)
+        trans_in.text.draw(win)
+        if new:
+            self.add_transition(trans_in)
+            inState.add_transition(trans_in)
+        return True
+
+    def find_edge(self, other, this):
+        dx = other.getX() - this.getX()
+        dy = other.getY() - this.getY()
+        rads = atan2(dy, dx)
+        rads %= (2 * pi)
+        X = this.getX() + (CIR_RADIUS * math.cos(rads))
+        Y = this.getY() + (CIR_RADIUS * math.sin(rads))
+        return Point(X, Y)
+
+    def find_degree(self, other):
+        dx = other.circle.getCenter().getX() - self.circle.getCenter().getX()
+        dy = other.circle.getCenter().getY() - self.circle.getCenter().getY()
+        rads = atan2(dy, dx)
+        rads %= (2 * pi)
+        deg = degrees(rads)
+        print("deg:", deg)
+        if 120 > deg > 60 or 240 < deg < 300:
+            return True
+        return False
+
+
     # Move transition
     def move(self, location, win):
         dx = location.x - self.getCenter().x
@@ -122,7 +208,6 @@ class State:
             self.transitions[i].remove()
         self.transitions = []
 
-
 class Transition:
     # vars:
     # outState - State at tail of transition
@@ -134,7 +219,6 @@ class Transition:
         self.inState = inState
         #: :type: State
         self.outState = outState
-
         self.symbols = []
         for i in symbols:
             self.symbols.append(i)
@@ -175,7 +259,8 @@ class Transition:
             self.text.undraw()
         if self.inState == self.outState: # Check if self-transition
             self.self_transition(win)
-        else:
+
+        if not self.outState.check_reverse(self.inState, self.symbols, win):
             line_first = self.movePoints(self.firstCenter(), self.secondCenter())
             line_second = self.movePoints(self.secondCenter(), self.firstCenter())
             self.line = Line(line_first, line_second)
