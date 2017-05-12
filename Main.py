@@ -174,7 +174,6 @@ def processClick(win, clk, tool):#, dfa):
         if move_begin_state is not None:  # state ready to relocate
             # Redraw and update state and transitions
             move_begin_state.move(clk, win)
-            #move_begin_state.circle.setFill("yellow")
             move_begin_state = None
             return
         q = find_containing_state(clk)
@@ -183,7 +182,7 @@ def processClick(win, clk, tool):#, dfa):
             move_begin_state = q
 
     elif tool == 4:  # remove state or transition
-        win.config(cursor="X_cursor")  # todo fix when cursor is present
+        win.config(cursor="X_cursor")
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
             for i in range(len(q.transitions)):
                 if q.tcontains(i, clk):

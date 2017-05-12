@@ -38,7 +38,7 @@ class State:
         if self.node.is_final:
             self.color = 'lightsalmon'
         elif self.node.is_initial:
-            self.color = 'darkseagreen'
+            self.color = 'lightskyblue'
         else:
             self.color ='yellow'
         self.circle.setFill(self.color)
@@ -103,7 +103,7 @@ class State:
         for t in self.transitions:
             if t.inState == inState and t.outState == self:
                 trans = t
-        if trans == None:
+        if trans is None:
             return False
         trans.add_symbol(symbols, win)
         return True
@@ -167,6 +167,7 @@ class State:
         point = Point(trans_in.line.getCenter().getX(), trans_in.line.getCenter().getY() + 10)
         trans_in.text = Text(point, s)
         trans_in.text.draw(win)
+        trans_in.above = False
         if new:
             self.add_transition(trans_in)
             inState.add_transition(trans_in)
@@ -233,6 +234,8 @@ class Transition:
             self.symbols.append(i)
         self.line = None
         self.text = None
+        self.arrow = None
+        self.above = True
 
     # Get first state's center
     def firstCenter(self):
@@ -257,7 +260,10 @@ class Transition:
             all_points = self.line.getPoints()
             point = Point(all_points[0].getX(), all_points[0].getY() - CIR_RADIUS - 5)
         else:
-            point = Point(self.line.getCenter().getX(), self.line.getCenter().getY() - 10)
+            if self.above:
+                point = Point(self.line.getCenter().getX(), self.line.getCenter().getY() - 10)
+            else:
+                point = Point(self.line.getCenter().getX(), self.line.getCenter().getY() + 10)
         self.text = Text(point, s)
         self.text.draw(win)
 
@@ -266,6 +272,8 @@ class Transition:
         if self.line is not None: # This only identifies during move, not create
             self.line.undraw()
             self.text.undraw()
+            if self.arrow is not None:
+                self.arrow.undraw()
         if self.inState == self.outState: # Check if self-transition
             self.self_transition(win)
         else:
@@ -285,6 +293,8 @@ class Transition:
     def undraw(self):
         self.line.undraw()
         self.text.undraw()
+        if self.arrow is not None:
+            self.arrow.undraw()
 
     # Deletes transition
     def remove(self):
@@ -318,6 +328,12 @@ class Transition:
         self.line.setOutline("black")
         self.line.setFill("white")
         self.line.draw(win)
+
+        l_left = Point(top.getX() + (CIR_RADIUS / 4), top.getY() - (CIR_RADIUS / 2.2))
+        l_right = Point(top.getX() + (CIR_RADIUS / 2.2), top.getY() - (CIR_RADIUS / 4))
+        self.arrow = Polygon(top, l_left, l_right)
+        self.arrow.setFill("black")
+        self.arrow.draw(win)
 
         s = ", ".join(self.symbols)
         point = Point(top.getX(), top.getY() - CIR_RADIUS - 5)
