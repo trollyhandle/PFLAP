@@ -21,11 +21,11 @@ class State:
         self.label = Text(node.center, node.name)
         self.color = ""
         #: :type: list of Transition
-        self.transitions = []  # todo list or dict?
+        self.transitions = []
 
     def equal(self, other):
         if self.node == other.node and self.circle == other.circle \
-            and self.label == other.label and self.color == other.color:
+                and self.label == other.label and self.color == other.color:
             if len(self.transitions) == len(other.transitions):
                 for trans in self.transitions:
                     if trans not in other.transitions:
@@ -33,14 +33,14 @@ class State:
                 return True
         return False
 
-    # Draws state with given color
+    # Draws state with given color and border width
     def draw(self, win):
+        self.circle.setWidth(1)
+        self.color = 'yellow'
         if self.node.is_final:
-            self.color = 'lightsalmon'
-        elif self.node.is_initial:
-            self.color = 'lightskyblue'
-        else:
-            self.color ='yellow'
+            self.circle.setWidth(3)
+        if self.node.is_initial:
+            self.color = 'plum'
         self.circle.setFill(self.color)
         self.circle.draw(win)
         self.label.draw(win)
@@ -52,9 +52,11 @@ class State:
         for line in self.transitions:
             line.draw(win)
 
+    # Print information about the state
     def print(self):
         print("center: ", self.node.center)
         print("circle: ", self.circle)
+        print("circle: ", self.color)
         print("number of trans: ", len(self.transitions))
 
     # Add transition to state's transition list
@@ -79,10 +81,9 @@ class State:
 
     # Returns if point is in self-transition triangle
     def point_in_triangle(self, click, list_of_points):
-        first_check = self.tri_test( click, list_of_points[0], list_of_points[1] ) < 0.0
-        second_check = self.tri_test( click, list_of_points[1], list_of_points[2] ) < 0.0
-        third_check = self.tri_test( click, list_of_points[2], list_of_points[0] ) < 0.0
-
+        first_check = self.tri_test(click, list_of_points[0], list_of_points[1]) < 0.0
+        second_check = self.tri_test(click, list_of_points[1], list_of_points[2]) < 0.0
+        third_check = self.tri_test(click, list_of_points[2], list_of_points[0]) < 0.0
         return first_check == second_check == third_check
 
     # Helper for point_in_triangle
@@ -111,12 +112,14 @@ class State:
     # If reverse transition exists, redraw transitions
     def check_reverse(self, inState, symbols, win):
         trans_out = None
+        # Find the reverse transition
         for t in inState.transitions:
             if t.inState == self and t.outState == inState:
                 trans_out = t
-        if trans_out == None:
+        if trans_out is None:
             return False
 
+        # Find new points to draw transition line
         if self.find_degree(inState):
             top_in = self.find_edge(Point(self.getCenter().getX() - 5, self.getCenter().getY()),
                                     Point(inState.getCenter().getX() - 5, inState.getCenter().getY()))
@@ -155,8 +158,7 @@ class State:
             if t.inState == inState:
                 trans_in = t
                 trans_in.undraw()
-
-        if trans_in == None:
+        if trans_in is None:
             trans_in = Transition(self, inState, symbols)
             new = True
 
@@ -173,6 +175,7 @@ class State:
             inState.add_transition(trans_in)
         return True
 
+    # Find the edge of the state in relation to another
     def find_edge(self, other, this):
         dx = other.getX() - this.getX()
         dy = other.getY() - this.getY()
@@ -182,6 +185,7 @@ class State:
         Y = this.getY() + (CIR_RADIUS * math.sin(rads))
         return Point(X, Y)
 
+    # Returns if transition has more vertical or horizontal alignment
     def find_degree(self, other):
         dx = other.circle.getCenter().getX() - self.circle.getCenter().getX()
         dy = other.circle.getCenter().getY() - self.circle.getCenter().getY()
@@ -192,7 +196,6 @@ class State:
         if 120 > deg > 60 or 240 < deg < 300:
             return True
         return False
-
 
     # Move transition
     def move(self, location, win):
@@ -206,7 +209,7 @@ class State:
         for line in self.transitions:
             line.draw(win)
 
-        # Set color back from lightblue
+        # Set color back from light blue
         self.circle.setFill(self.color)
 
     # Delete state and all of its transitions
@@ -223,6 +226,10 @@ class Transition:
     # outState - State at tail of transition
     # inState - State at head of transition
     # symbols - Transition symbols
+    # text - Text object representation of symbols
+    # line - Transition line (Line or Polygon)
+    # arrow - Polygon (triangle) object on self-transitions
+    # above - Differentiate when text is drawn above or below line
 
     def __init__(self, outState, inState, symbols):
         #: :type: State
@@ -232,8 +239,8 @@ class Transition:
         self.symbols = []
         for i in symbols:
             self.symbols.append(i)
-        self.line = None
         self.text = None
+        self.line = None
         self.arrow = None
         self.above = True
 
@@ -255,7 +262,7 @@ class Transition:
             self.symbols.append(symbol)
         s = ", ".join(self.symbols)
 
-        # Draw symbol(s) alove the transition
+        # Draw symbol(s) above the transition
         if self.outState == self.inState:
             all_points = self.line.getPoints()
             point = Point(all_points[0].getX(), all_points[0].getY() - CIR_RADIUS - 5)
@@ -285,29 +292,29 @@ class Transition:
                 self.line.draw(win)
 
                 s = ", ".join(self.symbols)
-                point = Point(self.line.getCenter().getX(), self.line.getCenter().getY() - 10)
+                if self.above:
+                    point = Point(self.line.getCenter().getX(), self.line.getCenter().getY() - 10)
+                else:
+                    point = Point(self.line.getCenter().getX(), self.line.getCenter().getY() + 10)
                 self.text = Text(point, s)
                 self.text.draw(win)
 
-    # Erase
+    # Erase transition from the window
     def undraw(self):
         self.line.undraw()
         self.text.undraw()
         if self.arrow is not None:
             self.arrow.undraw()
 
-    # Deletes transition
+    # Deletes transition completely
     def remove(self):
         self.undraw()
         self.outState.remove_transition(self)
         self.inState.remove_transition(self)
 
+    # Takes two points and returns a point that is distance t from first point
     def movePoints(self, first, second):
-        """
-        Takes two points and returns a point that is distance t from first point
-        """
         if first.x == second.x and first.y == second.y:
-            # todo self-transition??
             return first
         d = math.sqrt(((second.getX() - first.getX()) ** 2) +
                       ((second.getY() - first.getY()) ** 2))
@@ -316,17 +323,12 @@ class Transition:
                       (((1 - t) * (first.getY())) + (t * second.getY())))
         return point
 
+    # Draws the self transition
     def self_transition(self, win):
-        """
-        Draws the self transition
-        """
         top = Point(self.inState.node.center.getX(), self.inState.node.center.getY() - CIR_RADIUS)
         left = Point(top.getX() - CIR_RADIUS, top.getY() - CIR_RADIUS)
         right = Point(left.getX() + (2 * CIR_RADIUS), left.getY())
-
         self.line = Polygon(top, left, right)
-        self.line.setOutline("black")
-        self.line.setFill("white")
         self.line.draw(win)
 
         l_left = Point(top.getX() + (CIR_RADIUS / 4), top.getY() - (CIR_RADIUS / 2.2))

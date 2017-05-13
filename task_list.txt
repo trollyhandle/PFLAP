@@ -13,6 +13,7 @@ x Detect mouse drags
 TRANSITIONS
 x labels (entryboxes)
   wider hitboxes or label hitboxes
+  FIX check_reverse, duplicate, check_existing
 
 ✓ if additional transition graphically created, edit existing one, redraw
 ✓ make transitions from state a->b->a distinguishable

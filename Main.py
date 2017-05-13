@@ -23,8 +23,6 @@ active_tool = 0
 tool_boxes = []  # type hinting is neat!
 #: :type: list of State
 states = []
-#: :type: list of Transitions
-transitions = []
 
 selected_state = None
 transition_begin_state = None
@@ -64,8 +62,32 @@ def init_window(win):
 def configRightClicks(win):
     initial = tk.BooleanVar()
     initial.set(False)
+    win.rightMenu.add_command(label='Set Initial', command=lambda: setInitial(win))
+    win.rightMenu.add_command(label='Set Final', command=lambda: setFinal(win))
+    win.rightMenu.add_command(label='Clear Status', command=lambda: clearStatus(win))
     win.rightMenu.add_command(label='Count Nodes', command=lambda: print('node count:', len(states)))
     win.rightMenu.add_checkbutton(label='check_test', variable=initial, command=lambda: print('check', initial.get()))
+
+
+def setInitial(win):
+    selected_state.node.is_initial = True
+    selected_state.circle.undraw()
+    selected_state.label.undraw()
+    selected_state.draw(win)
+
+
+def setFinal(win):
+    selected_state.node.is_final = True
+    selected_state.circle.undraw()
+    selected_state.label.undraw()
+    selected_state.draw(win)
+
+
+def clearStatus(win):
+    selected_state.node.is_initial = selected_state.node.is_final = False
+    selected_state.circle.undraw()
+    selected_state.label.undraw()
+    selected_state.draw(win)
 
 
 def switchActiveButton(next_tool, win):
@@ -81,16 +103,14 @@ def switchActiveButton(next_tool, win):
         win.config(cursor="left_ptr")
 
 
-
 def main():
-    print('yay pflap')
+    print('Welcome to pflap!')
     from_scratch = False
 
     win = GraphWin('PFLAP', WIN_WIDTH, WIN_HEIGHT, autoflush=False)
     init_window(win)
 
     configRightClicks(win)
-
 
     # if from_scratch:  # create brand-new dfa
     #     dfa = DFA()
@@ -127,12 +147,12 @@ def processClick(win, clk, tool):#, dfa):
                 selected_state.circle.setFill(selected_state.color)
             selected_state = q
             q.circle.setFill('light blue')
-        elif selected_state is not None:  # clicked in voidspace
+        elif selected_state is not None:  # clicked in void space
             selected_state.circle.setFill(selected_state.color)
             selected_state = None
 
     elif tool == 1:  # add state
-        new_state = State(DFANode("q" + str(len(states) + 1, ), clk))
+        new_state = State(DFANode("q" + str(len(states) + 1, ), clk))  # Can have multiple states w same name!!!!
         new_state.draw(win)
         states.append(new_state)
 
@@ -145,8 +165,6 @@ def processClick(win, clk, tool):#, dfa):
                 q.circle.setFill('blue')
                 transition_begin_state = q
             else:  # second state
-
-                # TODO: Temp way to store/print input symbols -- Put lambda if none
                 symbols = input("Input transition symbol(s): ").split()
                 if len(symbols) == 0:
                     symbols = "λ"
@@ -156,7 +174,6 @@ def processClick(win, clk, tool):#, dfa):
                     if not transition_begin_state.check_reverse(q, symbols, win):   # If no reverse transition
                         trans = Transition(transition_begin_state, q, symbols)
                         trans.draw(win)
-                        transitions.append(trans)
 
                         # Add transition to each state -- used to app ln
                         transition_begin_state.add_transition(trans)
@@ -172,7 +189,6 @@ def processClick(win, clk, tool):#, dfa):
     elif tool == 3:  # move state
         global move_begin_state  # prevent local namespace shadowing
         if move_begin_state is not None:  # state ready to relocate
-            # Redraw and update state and transitions
             move_begin_state.move(clk, win)
             move_begin_state = None
             return
@@ -182,7 +198,7 @@ def processClick(win, clk, tool):#, dfa):
             move_begin_state = q
 
     elif tool == 4:  # remove state or transition
-        win.config(cursor="X_cursor")
+        win.config(cursor="X_cursor")   # Set cursor to a cool "X"
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
             for i in range(len(q.transitions)):
                 if q.tcontains(i, clk):
