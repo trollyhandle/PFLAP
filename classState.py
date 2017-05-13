@@ -74,6 +74,8 @@ class State:
 
     # If transition line was clicked
     def tcontains(self, index, click):
+        if self.transitions[index].rect.contains(click):
+            return True
         if self.transitions[index].inState.equal(self.transitions[index].outState):
             return self.point_in_triangle(click, self.transitions[index].line.getPoints())
         first, second = self.transitions[index].line.getP1(), self.transitions[index].line.getP2()
@@ -151,6 +153,11 @@ class State:
         trans_out.text = Text(point, s)
         trans_out.text.draw(win)
 
+        length = len(trans_out.symbols) * 3 // 2
+        first = Point(point.getX() - length, point.getY() - 4)
+        second = Point(point.getX() + length, point.getY() + 4)
+        trans_out.rect = Rectangle(first, second)
+
         # Draw transition going in
         trans_in = None
         new = False
@@ -170,6 +177,12 @@ class State:
         trans_in.text = Text(point, s)
         trans_in.text.draw(win)
         trans_in.above = False
+
+        length = len(trans_in.symbols) * 3 // 2
+        first = Point(point.getX() - length, point.getY() - 4)
+        second = Point(point.getX() + length, point.getY() + 4)
+        trans_in.rect = Rectangle(first, second)
+
         if new:
             self.add_transition(trans_in)
             inState.add_transition(trans_in)
@@ -227,6 +240,7 @@ class Transition:
     # inState - State at head of transition
     # symbols - Transition symbols
     # text - Text object representation of symbols
+    # rect - Rectangle over text acting as hit box
     # line - Transition line (Line or Polygon)
     # arrow - Polygon (triangle) object on self-transitions
     # above - Differentiate when text is drawn above or below line
@@ -240,6 +254,7 @@ class Transition:
         for i in symbols:
             self.symbols.append(i)
         self.text = None
+        self.rect = None
         self.line = None
         self.arrow = None
         self.above = True
@@ -274,6 +289,12 @@ class Transition:
         self.text = Text(point, s)
         self.text.draw(win)
 
+        length = len(self.symbols) * 3
+        first = Point(point.getX() - length, point.getY() - 4)
+        second = Point(point.getX() + length, point.getY() + 4)
+        self.rect = Rectangle(first, second)
+
+
     # Draw
     def draw(self, win):
         if self.line is not None: # This only identifies during move, not create
@@ -298,6 +319,11 @@ class Transition:
                     point = Point(self.line.getCenter().getX(), self.line.getCenter().getY() + 10)
                 self.text = Text(point, s)
                 self.text.draw(win)
+
+                length = len(self.symbols) * 3 // 2
+                first = Point(point.getX() - length, point.getY() - 4)
+                second = Point(point.getX() + length, point.getY() + 4)
+                self.rect = Rectangle(first, second)
 
     # Erase transition from the window
     def undraw(self):
@@ -341,3 +367,8 @@ class Transition:
         point = Point(top.getX(), top.getY() - CIR_RADIUS - 5)
         self.text = Text(point, s)
         self.text.draw(win)
+
+        length = len(self.symbols) * 3 // 2
+        first = Point(point.getX() - length, point.getY() - 4)
+        second = Point(point.getX() + length, point.getY() + 4)
+        self.rect = Rectangle(first, second)
