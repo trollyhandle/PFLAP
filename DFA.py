@@ -2,9 +2,11 @@ from collections import deque  # used for generating a DFA
 
 from classState import *
 
+
 class DFANode:
 
-    def __init__(self, name, center=None, initial=False, final=False):
+    def __init__(self, name, center=None, initial=False, final=False, id=-1):
+        self.id = id
         self.name = name
         self.transitions = {}  # (character, newstate) k/v pairs
         self.is_final = final
@@ -41,12 +43,35 @@ class DFA:
         self.nodes = {}
         self.initial = None
         self.final = set()
+        self.free_ids = set()
 
     def __str__(self):
         return 'DFA containing {0} nodes'.format(len(self.nodes))
 
     def get_node_by_id(self, ident):
-        return self.nodes[ident]
+        return self.nodes.get(ident, None)
+
+    def add_node(self, node):
+        id = node.id
+        if id < 0:
+            id = self.get_free_id()
+            node.id = id
+        if id in self.nodes:
+            return False
+        self.nodes[id] = node
+        return True
+
+    def remove_node(self, node):
+        print('removing node', node)
+        if node.id in self.nodes:
+            self.nodes.pop(node.id)
+            self.free_ids.add(node.id)
+            # todo transitions to/from node
+
+    def get_free_id(self):
+        f = len(self.nodes)
+        if len(self.free_ids) > 0: f = self.free_ids.pop()
+        return f
 
     def print(self):
         print('initial state id:', self.initial, ' (name: "'+self.nodes[self.initial].name+'")')
@@ -67,7 +92,7 @@ class DFA:
         else:
             print('invalid string')
 
-    def inflate(self, win, autolayout=True):
+    def inflate(self, win, vertical_offset):
         """
         Creates the graphics representations of this DFA.
         Constructs State objects, and connects with Transition objects based
@@ -75,13 +100,27 @@ class DFA:
         Objects are drawn into win.
         :return: list of State objects inflated
         """
-        # todo if autolayout, figure out a way to arrange states
+        def layout(num_nodes, win_padding=60):
+            aspect_ratio = (win.getWidth() - 2 * win_padding)\
+                           / (win.getHeight() - 2 * win_padding - vertical_offset)
+            nodes_tall = int(math.sqrt(num_nodes/aspect_ratio))
+            nodes_wide = int(num_nodes / nodes_tall)
+            hspace = (win.getWidth() - 2 * win_padding) // nodes_wide
+            vspace = (win.getHeight() - 2 * win_padding) // nodes_tall
+            for j in range(nodes_tall + 1):
+                for i in range(nodes_wide + 1):
+                    x = win_padding + i * hspace
+                    y = vertical_offset + win_padding + j * vspace + (i%2)*(vspace//4)
+                    yield Point(x, y)
+            while True: yield Point(50, vertical_offset+50)  # in case of overflow
+        position_generator = layout(len(self.nodes))
+
         states = []
         state_ids = []
         # construct all State objects
         for k in self.nodes:
             if self.nodes[k].center is None:
-                self.nodes[k].center = Point(100, 100)
+                self.nodes[k].center = next(position_generator)
             s = State(self.nodes[k])
             s.draw(win)
             states.append(s)
@@ -113,7 +152,7 @@ class DFA:
         ready_states = {initial: 0}
         # make new DFA
         dfa = DFA()
-        dfa.nodes[0] = DFANode(initial)
+        dfa.nodes[0] = DFANode(initial, final=accept_fn(initial), id=0)
         dfa.initial = 0
         # for each state in q:
         while len(new_states) > 0:
@@ -123,9 +162,10 @@ class DFA:
                 if to_state not in ready_states:
                     # trace a new state, add to DFA
                     new_states.append(to_state)
-                    ready_states[to_state] = len(dfa.nodes)
-                    new_node = DFANode(to_state, final=accept_fn(to_state))
-                    dfa.nodes[len(dfa.nodes)] = new_node
+                    node_id = len(dfa.nodes)
+                    ready_states[to_state] = node_id
+                    new_node = DFANode(to_state, final=accept_fn(to_state), id=node_id)
+                    dfa.nodes[node_id] = new_node
                     if accept_fn(to_state):
                         dfa.final.add(new_node)
                 # create the transition
@@ -137,12 +177,13 @@ class DFA:
         print('dfa test\n')
 
         print("Alphabet: { a, b }")
-        alphabet = ['a', 'b']
+        alphabet = ('a', 'b', 'c')
 
-        print("L = { w | len(w) == 3 and w is homogeneous over the alphabet }")
-        strlen = 3
+        print("L = { w | len(w) == 2 and w is homogeneous over the alphabet }")
+        strlen = 2
         transition_fn = lambda x, a: x+a if len(x) < strlen else x[1:]+a
-        accept_fn = lambda x: len(x) == strlen and (x.find('a') == -1 or x.find('b') == -1)
+        accept_fn = lambda x: len(x) == strlen and \
+                              (x.find('a') == -1 or x.find('b') == -1 or x.find('c') == -1)
 
         dfa = DFA.generate(alphabet, transition_fn, '', accept_fn)
         dfa.print()

@@ -20,7 +20,7 @@ TRANSITIONS
 
 STATE
   later: edit capability (after right-click)
-  state default names fix
+✓ state default names fix
 ✓ distinguish initial, final states graphically (colors!)
 
 DFA

@@ -16,15 +16,13 @@ WIN_HEIGHT = 600
 WIN_WIDTH = 800
 CIR_RADIUS = 20
 
-toolbar_height = WIN_HEIGHT // 12
+toolbar_height = 50
 
 active_tool = 0
 #: :type: list of Rectangle
 tool_boxes = []  # type hinting is neat!
 #: :type: list of State
 states = []
-#: :type: list of Transitions
-transitions = []
 
 selected_state = None
 transition_begin_state = None
@@ -35,7 +33,7 @@ def init_window(win):
     """ 
     :param win: graphics window to initialize 
     @type win tk.Canvas """
-    tool_titles = ['Cursor', 'Add State', 'Add Transition', 'Move', 'Remove']
+    tool_titles = ['Cursor', 'Add State', 'Add Transition', 'Move', 'Remove', 'Simulate']
     toolbar_box_width = WIN_WIDTH // len(tool_titles)
 
     padding = 10
@@ -52,7 +50,7 @@ def init_window(win):
         rect.draw(win)
         tool_boxes.append(rect)
 
-        button_width = 15
+        button_width = 12
         button = tk.Button(win, text=tool_titles[i], width=button_width, command=gen_callback(i))
 
         win.create_window(rect.getCenter().x, rect.getCenter().y, window=button)
@@ -65,7 +63,7 @@ def configRightClicks(win):
     initial = tk.BooleanVar()
     initial.set(False)
     win.rightMenu.add_command(label='Count Nodes', command=lambda: print('node count:', len(states)))
-    win.rightMenu.add_checkbutton(label='check_test', variable=initial, command=lambda: print('check', initial.get()))
+    # win.rightMenu.add_checkbutton(label='check_test', variable=initial, command=lambda: print('check', initial.get()))
 
 
 def switchActiveButton(next_tool, win):
@@ -81,7 +79,6 @@ def switchActiveButton(next_tool, win):
         win.config(cursor="left_ptr")
 
 
-
 def main():
     print('yay pflap')
     from_scratch = False
@@ -91,13 +88,12 @@ def main():
 
     configRightClicks(win)
 
-
-    # if from_scratch:  # create brand-new dfa
-    #     dfa = DFA()
-    # else:  # generate dfa
-    #     dfa = DFA.example()
-    #     global states
-    #     states = dfa.inflate(win)
+    if from_scratch:  # create brand-new dfa
+        dfa = DFA()
+    else:  # generate dfa
+        dfa = DFA.example()
+        global states
+        states = dfa.inflate(win, toolbar_height)
 
     while True:
         try:
@@ -107,7 +103,9 @@ def main():
             break  # aka return aka END OF THE LINE
 
         if clk_pt.getY() > toolbar_height:
-            processClick(win, clk_pt, active_tool)#, dfa)
+            processClick(win, clk_pt, active_tool, dfa)
+        dfa.print()
+        print()
 
 
 def find_containing_state(clk):
@@ -118,7 +116,7 @@ def find_containing_state(clk):
     return None
 
 
-def processClick(win, clk, tool):#, dfa):
+def processClick(win, clk, tool, dfa):
     if tool == 0:  # cursor (edit state/transition)
         global selected_state  # prevent local namespace shadowing
         q = find_containing_state(clk)
@@ -132,7 +130,10 @@ def processClick(win, clk, tool):#, dfa):
             selected_state = None
 
     elif tool == 1:  # add state
-        new_state = State(DFANode("q" + str(len(states) + 1, ), clk))
+        new_id = dfa.get_free_id()
+        new_node = DFANode("q" + str(new_id), center=clk, id=new_id)
+        dfa.add_node(new_node)
+        new_state = State(new_node)
         new_state.draw(win)
         states.append(new_state)
 
@@ -156,7 +157,6 @@ def processClick(win, clk, tool):#, dfa):
                     if not transition_begin_state.check_reverse(q, symbols, win):   # If no reverse transition
                         trans = Transition(transition_begin_state, q, symbols)
                         trans.draw(win)
-                        transitions.append(trans)
 
                         # Add transition to each state -- used to app ln
                         transition_begin_state.add_transition(trans)
@@ -183,19 +183,23 @@ def processClick(win, clk, tool):#, dfa):
             move_begin_state = q
 
     elif tool == 4:  # remove state or transition
-        win.config(cursor="X_cursor")  # todo fix when cursor is present
+        # win.config(cursor="X_cursor")  # todo fix when cursor is present
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
             for i in range(len(q.transitions)):
                 if q.tcontains(i, clk):
+                    # todo remove transition from node
                     q.transitions[i].remove()
                     break
             if q.circle.contains(clk):
+                dfa.remove_node(q.node)
                 states.remove(q)
                 q.delete()
                 break
 
+    # elif tool == 5:  # simulate input
+
     else:  # undo, redo? other stuff
-        print('tool not ready')
+        print('tool not ready gtfo')  # new kmessage more accurately reflects my mental state
 
     win.flush()  # force update after any visual changes
 
