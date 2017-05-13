@@ -112,13 +112,12 @@ def main():
 
     configRightClicks(win)
 
-
-     if from_scratch:  # create brand-new dfa
-         dfa = DFA()
-     else:  # generate dfa
-         dfa = DFA.example()
-         global states
-         states = dfa.inflate(win, toolbar_height)
+    if from_scratch:  # create brand-new dfa
+        dfa = DFA()
+    else:  # generate dfa
+        dfa = DFA.example()
+        global states
+        states = dfa.inflate(win, toolbar_height)
 
     while True:
         try:
