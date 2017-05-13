@@ -136,23 +136,24 @@ class DFA:
         return states
 
     @staticmethod
-    def generate(alphabet, transition_fn, initial, accept_fn):
+    def generate(alphabet, transition_fn, first_state, accept_fn):
         """
         Generates a DFA algorithmically
         :param alphabet: list of strings in the alphabet
         :param transition_fn: function. accepts state name and transition label.
                                 returns new state name
-        :param initial: the initial state (string)
+        :param first_state: the initial state (string)
         :param accept_fn: function. takes a state, outputs True if it is an accepting state
         :return:
         """
         # make queue for uninitialized states; add initial
         new_states = deque()
-        new_states.append(initial)
-        ready_states = {initial: 0}
+        new_states.append(first_state)
+        ready_states = {first_state: 0}
         # make new DFA
         dfa = DFA()
-        dfa.nodes[0] = DFANode(initial, final=accept_fn(initial), id=0)
+        name = 'λ' if len(first_state) == 0 else first_state
+        dfa.nodes[0] = DFANode(name, initial=True, final=accept_fn(initial), id=0)
         dfa.initial = 0
         # for each state in q:
         while len(new_states) > 0:
@@ -163,8 +164,9 @@ class DFA:
                     # trace a new state, add to DFA
                     new_states.append(to_state)
                     node_id = len(dfa.nodes)
+                    name = 'λ' if len(to_state) == 0 else to_state
                     ready_states[to_state] = node_id
-                    new_node = DFANode(to_state, final=accept_fn(to_state), id=node_id)
+                    new_node = DFANode(name, final=accept_fn(to_state), id=node_id)
                     dfa.nodes[node_id] = new_node
                     if accept_fn(to_state):
                         dfa.final.add(new_node)
@@ -177,13 +179,12 @@ class DFA:
         print('dfa test\n')
 
         print("Alphabet: { a, b }")
-        alphabet = ('a', 'b', 'c')
+        alphabet = ['a', 'b']
 
-        print("L = { w | len(w) == 2 and w is homogeneous over the alphabet }")
-        strlen = 2
+        print("L = { w | len(w) == 3 and w is homogeneous over the alphabet }")
+        strlen = 3
         transition_fn = lambda x, a: x+a if len(x) < strlen else x[1:]+a
-        accept_fn = lambda x: len(x) == strlen and \
-                              (x.find('a') == -1 or x.find('b') == -1 or x.find('c') == -1)
+        accept_fn = lambda x: len(x) == strlen and (x.find('a') == -1 or x.find('b') == -1)
 
         dfa = DFA.generate(alphabet, transition_fn, '', accept_fn)
         dfa.print()

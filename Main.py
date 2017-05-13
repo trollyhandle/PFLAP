@@ -62,8 +62,32 @@ def init_window(win):
 def configRightClicks(win):
     initial = tk.BooleanVar()
     initial.set(False)
+    win.rightMenu.add_command(label='Set Initial', command=lambda: setInitial(win))
+    win.rightMenu.add_command(label='Set Final', command=lambda: setFinal(win))
+    win.rightMenu.add_command(label='Clear Status', command=lambda: clearStatus(win))
     win.rightMenu.add_command(label='Count Nodes', command=lambda: print('node count:', len(states)))
     # win.rightMenu.add_checkbutton(label='check_test', variable=initial, command=lambda: print('check', initial.get()))
+
+
+def setInitial(win):
+    selected_state.node.is_initial = True
+    selected_state.circle.undraw()
+    selected_state.label.undraw()
+    selected_state.draw(win)
+
+
+def setFinal(win):
+    selected_state.node.is_final = True
+    selected_state.circle.undraw()
+    selected_state.label.undraw()
+    selected_state.draw(win)
+
+
+def clearStatus(win):
+    selected_state.node.is_initial = selected_state.node.is_final = False
+    selected_state.circle.undraw()
+    selected_state.label.undraw()
+    selected_state.draw(win)
 
 
 def switchActiveButton(next_tool, win):
@@ -80,7 +104,7 @@ def switchActiveButton(next_tool, win):
 
 
 def main():
-    print('yay pflap')
+    print('yay pflap!')
     from_scratch = False
 
     win = GraphWin('PFLAP', WIN_WIDTH, WIN_HEIGHT, autoflush=False)
@@ -88,12 +112,13 @@ def main():
 
     configRightClicks(win)
 
-    if from_scratch:  # create brand-new dfa
-        dfa = DFA()
-    else:  # generate dfa
-        dfa = DFA.example()
-        global states
-        states = dfa.inflate(win, toolbar_height)
+
+     if from_scratch:  # create brand-new dfa
+         dfa = DFA()
+     else:  # generate dfa
+         dfa = DFA.example()
+         global states
+         states = dfa.inflate(win, toolbar_height)
 
     while True:
         try:
@@ -133,7 +158,7 @@ def processClick(win, clk, tool, dfa):
         new_id = dfa.get_free_id()
         new_node = DFANode("q" + str(new_id), center=clk, id=new_id)
         dfa.add_node(new_node)
-        new_state = State(new_node)
+        new_state = State(new_node)  # Can have multiple states w same name!!!!
         new_state.draw(win)
         states.append(new_state)
 
@@ -146,8 +171,6 @@ def processClick(win, clk, tool, dfa):
                 q.circle.setFill('blue')
                 transition_begin_state = q
             else:  # second state
-
-                # TODO: Temp way to store/print input symbols -- Put lambda if none
                 symbols = input("Input transition symbol(s): ").split()
                 if len(symbols) == 0:
                     symbols = "λ"
@@ -172,9 +195,7 @@ def processClick(win, clk, tool, dfa):
     elif tool == 3:  # move state
         global move_begin_state  # prevent local namespace shadowing
         if move_begin_state is not None:  # state ready to relocate
-            # Redraw and update state and transitions
             move_begin_state.move(clk, win)
-            #move_begin_state.circle.setFill("yellow")
             move_begin_state = None
             return
         q = find_containing_state(clk)
@@ -183,7 +204,7 @@ def processClick(win, clk, tool, dfa):
             move_begin_state = q
 
     elif tool == 4:  # remove state or transition
-        # win.config(cursor="X_cursor")  # todo fix when cursor is present
+        win.config(cursor="X_cursor")   # Set cursor to a cool "X"
         for q in reversed(states):  # run backwards to preserve expected ordering (top-to-bottom)
             for i in range(len(q.transitions)):
                 if q.tcontains(i, clk):
@@ -199,7 +220,7 @@ def processClick(win, clk, tool, dfa):
     # elif tool == 5:  # simulate input
 
     else:  # undo, redo? other stuff
-        print('tool not ready gtfo')  # new kmessage more accurately reflects my mental state
+        print('tool not ready')
 
     win.flush()  # force update after any visual changes
 

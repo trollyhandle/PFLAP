@@ -8,18 +8,19 @@ GENERAL
 GRAPHICS
 ✓ Limit transitions to connecting edges of states instead of center
 ✓ Detect right-clicks
-  Detect mouse drags
+x Detect mouse drags
 
 TRANSITIONS
-  labels (entryboxes)
+x labels (entryboxes)
   wider hitboxes or label hitboxes
+  FIX check_reverse, duplicate, check_existing
 
 ✓ if additional transition graphically created, edit existing one, redraw
-  make transitions from state a->b->a distinguishable
+✓ make transitions from state a->b->a distinguishable
 ✓ make self-transitions a thing
 
 STATE
-  later: edit capability (after right-click)
+  later: edit capability (after right-click) initial, final, rename
 ✓ state default names fix
 ✓ distinguish initial, final states graphically (colors!)
 
