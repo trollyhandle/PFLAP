@@ -206,7 +206,7 @@ class State:
         rads %= (2 * pi)
         deg = degrees(rads)
         print("deg:", deg)
-        if 120 > deg > 60 or 240 < deg < 300:
+        if 60 < deg < 120 or 240 < deg < 300:
             return True
         return False
 

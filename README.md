@@ -22,7 +22,7 @@ This tool will have an interface similar to JFLAP in several ways:
 
         Users can create states and transitions
         Users can set and edit labels on states/transitions
-        Users can execute the supported operations via the aforementioned toolbox
+        Users can execute the supported operations via the toolbox
 
         DFA's can be generated programmatically given:
                 initial state

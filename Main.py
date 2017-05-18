@@ -12,6 +12,8 @@
 
 from DFA import *
 
+dfa = None
+
 WIN_HEIGHT = 600
 WIN_WIDTH = 800
 CIR_RADIUS = 20
@@ -90,7 +92,14 @@ def clearStatus(win):
     selected_state.draw(win)
 
 
+def simulate():
+    dfa.simulate(input("Enter input string: "))
+
+
 def switchActiveButton(next_tool, win):
+    if next_tool == 5:  # simulate
+        simulate()
+        return
     global active_tool
     tool_boxes[active_tool].setOutline('black')
     tool_boxes[active_tool].setWidth(1)
@@ -112,10 +121,11 @@ def main():
 
     configRightClicks(win)
 
+    global dfa
     if from_scratch:  # create brand-new dfa
         dfa = DFA()
     else:  # generate dfa
-        dfa = DFA.example()
+        dfa = DFA.load()
         global states
         states = dfa.inflate(win, toolbar_height)
 

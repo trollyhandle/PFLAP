@@ -85,12 +85,12 @@ class DFA:
             state = self.nodes[state].get_transition_on(char)
             if (debug): print("state {0:2} ({1})".format(state, self.nodes[state].name))
             if state == -1:
-                print('error')
+                print('simulation error')
                 return
         if self.nodes[state].is_final:
-            print('accepted')
+            print('string accepted')
         else:
-            print('invalid string')
+            print('string not accepted')
 
     def inflate(self, win, vertical_offset):
         """
@@ -153,7 +153,7 @@ class DFA:
         # make new DFA
         dfa = DFA()
         name = 'λ' if len(first_state) == 0 else first_state
-        dfa.nodes[0] = DFANode(name, initial=True, final=accept_fn(initial), id=0)
+        dfa.nodes[0] = DFANode(name, initial=True, final=accept_fn(first_state), id=0)
         dfa.initial = 0
         # for each state in q:
         while len(new_states) > 0:
@@ -175,20 +175,6 @@ class DFA:
         return dfa
 
     @staticmethod
-    def example():
-        print('dfa test\n')
-
-        print("Alphabet: { a, b }")
-        alphabet = ['a', 'b']
-
-        print("L = { w | len(w) == 3 and w is homogeneous over the alphabet }")
-        strlen = 3
-        transition_fn = lambda x, a: x+a if len(x) < strlen else x[1:]+a
-        accept_fn = lambda x: len(x) == strlen and (x.find('a') == -1 or x.find('b') == -1)
-
-        dfa = DFA.generate(alphabet, transition_fn, '', accept_fn)
-        dfa.print()
-
-        dfa.simulate('aaaabbaabbaaa')
-
-        return dfa
+    def load():
+        import generator as g
+        return DFA.generate(g.alphabet, g.transition, g.initial, g.accept)
